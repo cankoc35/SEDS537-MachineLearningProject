@@ -1,0 +1,7 @@
+# Add project dependencies here, for example:
+# transformers
+# datasets
+# scikit-learn
+# pandas
+# numpy
+# matplotlib
