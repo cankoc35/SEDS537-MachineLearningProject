@@ -12,7 +12,7 @@
 \begin{document}
 
 \begin{center}
-{\large \textbf{LLM Hallucination Detection via Uncertainty-Aware Multi-Signal Fusion}}\\
+{\large \textbf{LLM Hallucination Detection via Uncertainty}}\\
 Mustafacan Koc\\
 SEDS 537 -- Machine Learning\\
 Spring 2026
@@ -31,9 +31,12 @@ The proposed method is a multi-signal hallucination detector that combines token
 The baseline methods will include entropy thresholding, token confidence thresholding, Logistic Regression, and Support Vector Machine (SVM). The threshold-based methods will classify responses using simple cutoffs on uncertainty signals such as token entropy and token probabilities. Logistic Regression and SVM will use handcrafted uncertainty features, including mean entropy, maximum entropy, average token confidence, and low-confidence token ratio, to distinguish hallucinated and supported responses.
 
 \proposalsection{Dataset}
+The main datasets will be TruthfulQA and HaluEval. TruthfulQA provides question-answering prompts designed to evaluate factual truthfulness, while HaluEval contains examples labeled for hallucination behavior. One dataset can be used for development and threshold tuning, and the other can be used for external validation to test generalization across benchmarks.
 
 \proposalsection{Evaluation Strategy}
+The methods will be evaluated as binary hallucination detectors using accuracy, precision, recall, F1-score, AUROC, and PR-AUC. The proposed method will be compared against all baselines on both datasets. An ablation study will measure the impact of uncertainty features, self-consistency, and retrieval-based evidence signals, and an error analysis will examine overconfident failures and unsupported but fluent responses.
 
 \proposalsection{Expected Challenges}
+Expected challenges include poorly calibrated token probabilities, hallucinated answers that appear fluent and confident, retrieval failures caused by weak evidence, and differences in label definitions across datasets. In addition, collecting multiple generations for consistency analysis may increase computational cost.
 
 \end{document}
