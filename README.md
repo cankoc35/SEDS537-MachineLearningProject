@@ -81,6 +81,7 @@ The project will also include:
 │   ├── proposal.tex
 │   └── proposal.pdf
 ├── scripts/
+│   ├── prepare_data.sh
 │   ├── evaluate.sh
 │   ├── run_baselines.sh
 │   ├── run_generation.sh
@@ -171,5 +172,8 @@ The final repository should include:
 
 - proposal drafted in LaTeX
 - repository structure initialized
-- implementation modules and script entrypoints created
-- experimental pipeline still to be implemented
+- data loading implemented for HaluEval QA and TruthfulQA generation
+- preprocessing implemented into a shared binary JSONL schema
+- `scripts/prepare_data.sh` created for reproducible data preparation
+- processed data generated under `data/processed/`
+- next milestone is uncertainty feature extraction from the processed examples

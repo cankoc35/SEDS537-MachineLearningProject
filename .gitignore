@@ -22,3 +22,6 @@ env/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# LLM models
+models/
