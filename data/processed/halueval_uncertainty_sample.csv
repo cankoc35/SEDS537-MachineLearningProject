@@ -1,0 +1,3 @@
+id,dataset,task,label,source,model,device,answer_length_tokens,mean_token_probability,min_token_probability,max_token_probability,mean_token_logprob,min_token_logprob,max_token_logprob,sum_token_logprob,negative_mean_logprob,low_confidence_token_ratio
+halueval_qa_000000_supported,halueval,qa,0,right_answer,models/qwen2.5-3b,cpu,3,0.9609375,0.921875,0.9921875,-0.040354410807291664,-0.08251953125,-0.007781982421875,-0.121063232421875,0.040354410807291664,0.0
+halueval_qa_000000_hallucinated,halueval,qa,1,hallucinated_answer,models/qwen2.5-3b,cpu,7,0.6138741629464286,0.0439453125,0.9921875,-1.040435791015625,-3.125,-0.007781982421875,-7.283050537109375,1.040435791015625,0.2857142857142857

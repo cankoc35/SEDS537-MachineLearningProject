@@ -2,178 +2,215 @@
 
 This repository contains the term project for `SEDS 537 - Machine Learning`.
 
-The project studies how to detect hallucinated large language model (LLM) outputs using uncertainty-related signals derived from generation. The main idea is to treat hallucination detection as a binary classification problem: given a prompt and a generated answer, predict whether the answer is supported or hallucinated.
+The project studies hallucination detection as a binary classification task. Given a prompt/context and an answer, the system predicts whether the answer is supported or hallucinated using uncertainty features extracted from an open-source LLM.
 
-## Project Aim
+## Current Approach
 
-Large language models can generate fluent responses that are factually incorrect or unsupported. These hallucinations reduce reliability in question answering and other knowledge-intensive tasks. This project aims to build and evaluate a reproducible framework for hallucination detection using uncertainty signals such as token confidence and entropy, together with additional signals like self-consistency and retrieval-based evidence agreement.
+The current implemented pipeline uses `Qwen/Qwen2.5-3B` as a feature extractor. Qwen is not prompted to judge whether an answer is hallucinated. Instead, the project reads Qwen's token-level probability distribution for a provided answer and computes uncertainty features.
 
-## Main Objective
+The extracted features include:
 
-The project will:
+- token confidence features such as mean/min/max token probability
+- log-probability features such as mean logprob and negative mean logprob
+- low-confidence token ratio
+- entropy features such as mean/max/sum entropy
+- high-entropy token ratio
 
-- generate answers with a fixed open-source LLM
-- extract uncertainty-related features from token probabilities
-- compare several baseline hallucination detection methods
-- propose a stronger multi-signal detection method
-- evaluate results with ablation study and error analysis
+These features are then used to train classical binary classifiers:
 
-## Planned Methods
-
-### Baseline Methods
-
-- Entropy thresholding
-- Token confidence thresholding
-- Logistic Regression on handcrafted uncertainty features
-- Support Vector Machine (SVM) on handcrafted uncertainty features
-
-### Proposed Method
-
-A multi-signal hallucination detector that combines:
-
-- token-level uncertainty features
-- self-consistency across multiple sampled responses
-- retrieval-based evidence agreement from a lightweight RAG component
+- Logistic Regression
+- Linear SVM
+- Random Forest
 
 ## Datasets
 
-The main datasets planned for this project are:
+The project currently uses:
 
-- `TruthfulQA`
-- `HaluEval`
+- `HaluEval QA`: main training and evaluation dataset
+- `TruthfulQA generation`: prepared for later external/generalization evaluation
 
-One dataset can be used for development and the other for external validation to test generalization.
+Processed datasets use this shared schema:
 
-## Evaluation Plan
+```text
+id, dataset, task, prompt, context, answer, label, source, metadata
+```
 
-The models will be evaluated as hallucination detectors using:
+where:
 
-- Accuracy
-- Precision
-- Recall
-- F1-score
-- AUROC
-- PR-AUC
-
-The project will also include:
-
-- ablation study on different feature groups
-- error analysis of failure cases
-- visualizations where useful
+```text
+label = 0 -> supported / truthful
+label = 1 -> hallucinated / unsupported
+```
 
 ## Repository Structure
 
 ```text
 .
 ├── data/
-│   ├── raw/
-│   ├── processed/
+│   ├── raw/                         # downloaded raw datasets
+│   ├── processed/                   # processed JSONL and feature tables
 │   └── README.md
 ├── docs/
-│   └── seds537_termProject.pdf
-├── notebooks/
-│   └── exploration.ipynb
+│   ├── development_log.md
+│   ├── literature/
+│   └── progress-report/
+├── models/                          # local downloaded LLM weights, ignored by Git
+│   └── qwen2.5-3b/
 ├── outputs/
 │   ├── figures/
 │   ├── predictions/
 │   └── tables/
-├── proposal/
-│   ├── proposal.tex
-│   └── proposal.pdf
 ├── scripts/
 │   ├── prepare_data.sh
-│   ├── evaluate.sh
-│   ├── run_baselines.sh
-│   ├── run_generation.sh
-│   └── run_proposed.sh
+│   └── evaluate.sh
 ├── src/
-│   ├── data/
-│   ├── evaluation/
-│   ├── features/
-│   ├── generation/
-│   ├── models/
+│   ├── data/                        # dataset download and preprocessing
+│   ├── evaluation/                  # metrics and classifier evaluation
+│   ├── features/                    # uncertainty, consistency, RAG feature modules
+│   ├── generation/                  # Qwen scoring and feature extraction
+│   ├── models/                      # Logistic Regression, SVM, Random Forest
 │   └── utils/
+├── proposal/
 ├── requirements.txt
 └── README.md
 ```
 
-## What We Are Going To Do
+## Setup
 
-The practical workflow of the project is:
+Create and activate a Python environment:
 
-1. Prepare `TruthfulQA` and `HaluEval` in a consistent format.
-2. Select and fix one base LLM for answer generation.
-3. Generate answers and collect token-level confidence or log-probability information.
-4. Extract uncertainty features such as mean entropy, max entropy, average token confidence, and low-confidence token ratio.
-5. Implement threshold-based baselines.
-6. Train classical classifiers such as Logistic Regression and SVM on the extracted features.
-7. Build the proposed multi-signal method by adding self-consistency and retrieval-based support features.
-8. Run experiments, ablation study, and error analysis.
-9. Produce figures, tables, and the final LNCS-style paper.
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Roadmap
+The project was developed with Python 3.11.
 
-### Phase 1: Project Setup
+## Data Preparation
 
-- finalize proposal
-- organize repository and experiment pipeline
-- define dataset format and labels
+Download and preprocess HaluEval QA and TruthfulQA generation:
 
-### Phase 2: Data and Generation
+```bash
+./scripts/prepare_data.sh
+```
 
-- download and inspect datasets
-- implement data loaders and preprocessing
-- generate answers with the selected LLM
-- collect token probabilities or logits
+Main processed files:
 
-### Phase 3: Feature Engineering
+```text
+data/processed/halueval.jsonl
+data/processed/truthfulqa.jsonl
+```
 
-- compute entropy-based features
-- compute confidence-based features
-- prepare response-level feature tables
+## Local LLM
 
-### Phase 4: Baselines
+The current feature extraction uses a local Qwen model:
 
-- implement entropy threshold baseline
-- implement token confidence threshold baseline
-- train Logistic Regression
-- train SVM
+```text
+models/qwen2.5-3b/
+```
 
-### Phase 5: Proposed Method
+This directory contains model weights and should not be committed to Git.
 
-- add self-consistency features
-- add retrieval and evidence-agreement features
-- train the final multi-signal hallucination detector
+If the model is not present locally, download it with Hugging Face:
 
-### Phase 6: Evaluation
+```bash
+hf download Qwen/Qwen2.5-3B \
+  --repo-type model \
+  --local-dir models/qwen2.5-3b
+```
 
-- compare all methods on both datasets
-- run ablation study
-- perform error analysis
-- generate tables and plots
+## Feature Extraction
 
-### Phase 7: Final Delivery
+Extract uncertainty and entropy features for HaluEval:
 
-- clean the codebase for reproducibility
-- document setup and execution steps
-- write the final paper and prepare presentation materials
+```bash
+.venv/bin/python -m src.generation.extract_logprobs \
+  --input data/processed/halueval.jsonl \
+  --limit 0 \
+  --model models/qwen2.5-3b \
+  --output data/processed/halueval_uncertainty_entropy_features.csv
+```
 
-## Reproducibility Goal
+Use a small test run before the full dataset:
 
-The final repository should include:
+```bash
+.venv/bin/python -m src.generation.extract_logprobs \
+  --input data/processed/halueval.jsonl \
+  --limit 10 \
+  --model models/qwen2.5-3b \
+  --output data/processed/halueval_uncertainty_entropy_10.csv
+```
 
-- clean project structure
-- dataset acquisition instructions
-- dependency file
-- generation, training, and evaluation scripts
-- enough documentation to reproduce the experiments
+`--limit 0` processes all examples.
+
+## Classification Evaluation
+
+Run the grouped 80/20 HaluEval evaluation:
+
+```bash
+./scripts/evaluate.sh
+```
+
+or directly:
+
+```bash
+.venv/bin/python -m src.evaluation.evaluate_uncertainty_classifiers
+```
+
+The evaluator:
+
+- loads `data/processed/halueval_uncertainty_entropy_features.csv`
+- uses a group-aware 80/20 train/test split
+- keeps paired supported/hallucinated answers from the same question in the same split
+- trains Logistic Regression, Linear SVM, and Random Forest
+- writes metrics and predictions to `outputs/`
+
+Output files:
+
+```text
+outputs/tables/halueval_classifier_metrics.csv
+outputs/predictions/halueval_classifier_predictions.csv
+```
+
+Current HaluEval 80/20 results:
+
+```text
+Logistic Regression: accuracy 0.9875, F1 0.9875, ROC-AUC 0.9986
+Linear SVM:          accuracy 0.9885, F1 0.9885, ROC-AUC 0.9986
+Random Forest:       accuracy 0.9883, F1 0.9883, ROC-AUC 0.9988
+```
+
+These results show strong separation on HaluEval QA, but they should not yet be interpreted as general hallucination detection performance across all domains.
+
+## Next Steps
+
+Planned next development steps:
+
+1. Extract the same uncertainty and entropy features for TruthfulQA.
+2. Train on HaluEval and test on TruthfulQA as an external generalization check.
+3. Add ablation experiments comparing:
+   - confidence/logprob features only
+   - entropy features only
+   - all uncertainty features
+4. Add error analysis for false positives and false negatives.
+5. Optionally add self-consistency and retrieval/evidence-agreement features if time allows.
 
 ## Current Status
 
-- proposal drafted in LaTeX
-- repository structure initialized
-- data loading implemented for HaluEval QA and TruthfulQA generation
-- preprocessing implemented into a shared binary JSONL schema
-- `scripts/prepare_data.sh` created for reproducible data preparation
-- processed data generated under `data/processed/`
-- next milestone is uncertainty feature extraction from the processed examples
+Completed:
+
+- HaluEval and TruthfulQA data loading
+- normalized JSONL preprocessing
+- Qwen-based token probability/logprob extraction
+- entropy feature extraction
+- full HaluEval uncertainty feature table
+- grouped 80/20 classification evaluation
+- Logistic Regression, Linear SVM, and Random Forest baselines
+
+In progress / remaining:
+
+- TruthfulQA external evaluation
+- ablation study
+- error analysis
+- final report tables and discussion

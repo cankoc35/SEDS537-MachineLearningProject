@@ -1,9 +1,4 @@
-"""Download and load raw datasets used by the project.
-
-This module keeps raw dataset acquisition reproducible. HaluEval is downloaded
-from the official GitHub repository. TruthfulQA is loaded through Hugging Face
-`datasets` and saved locally as JSONL so preprocessing can run from disk later.
-"""
+"""Download and load raw datasets used by the project."""
 
 from __future__ import annotations
 

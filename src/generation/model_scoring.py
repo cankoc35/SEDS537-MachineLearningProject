@@ -117,9 +117,14 @@ def score_answer_tokens(
 
     for answer_index, token_id in enumerate(answer_ids):
         prediction_position = answer_start + answer_index - 1
-        token_logprobs = functional.log_softmax(logits[prediction_position], dim=-1)
+        token_logprobs = functional.log_softmax(
+            logits[prediction_position].float(),
+            dim=-1,
+        )
+        token_probs = torch.exp(token_logprobs)
         token_logprob = token_logprobs[token_id].item()
-        token_probability = float(torch.exp(token_logprobs[token_id]).item())
+        token_probability = float(token_probs[token_id].item())
+        token_entropy = float(-(token_probs * token_logprobs).sum().item())
         token = tokenized["answer_tokens"][answer_index]
 
         token_scores.append(
@@ -130,6 +135,7 @@ def score_answer_tokens(
                 "token_text": tokenizer.convert_tokens_to_string([token]),
                 "probability": token_probability,
                 "logprob": token_logprob,
+                "entropy": token_entropy,
             }
         )
 
