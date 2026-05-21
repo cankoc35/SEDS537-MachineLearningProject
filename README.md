@@ -2,44 +2,72 @@
 
 This repository contains the term project for `SEDS 537 - Machine Learning`.
 
-The project studies hallucination detection as a binary classification task. Given a prompt/context and an answer, the system predicts whether the answer is supported or hallucinated using uncertainty features extracted from an open-source LLM.
+The project studies hallucination detection as a binary classification task. Given a question, a candidate answer, and optionally a context passage, the system predicts whether the answer is supported/truthful or hallucinated/unsupported.
 
-## Current Approach
+## Project Aim
 
-The current implemented pipeline uses `Qwen/Qwen2.5-3B` as a feature extractor. Qwen is not prompted to judge whether an answer is hallucinated. Instead, the project reads Qwen's token-level probability distribution for a provided answer and computes uncertainty features.
+The aim is to detect hallucinated LLM answers using uncertainty signals extracted from an open-source LLM. The current implementation uses `Qwen/Qwen2.5-3B` as a feature extractor. Qwen is not asked to judge hallucination directly. Instead, the code reads Qwen's token-level probability distribution for a given answer and computes numeric uncertainty features.
 
-The extracted features include:
+Current feature groups:
 
-- token confidence features such as mean/min/max token probability
-- log-probability features such as mean logprob and negative mean logprob
+- token probability features
+- token log-probability features
 - low-confidence token ratio
-- entropy features such as mean/max/sum entropy
+- token entropy features
 - high-entropy token ratio
 
-These features are then used to train classical binary classifiers:
+These features are used to train:
 
 - Logistic Regression
 - Linear SVM
 - Random Forest
 
+## Current Finding
+
+The method works very well on context-grounded HaluEval QA, but performance is weaker on no-context TruthfulQA. This suggests that the current detector is strongest when context/evidence is available.
+
+Important limitation:
+
+```text
+The classifier does not directly use raw context text.
+However, context affects the uncertainty features because Qwen scores:
+context + question + answer
+```
+
+For open-domain question-answer pairs without context, the method depends more heavily on Qwen's internal knowledge and calibration.
+
 ## Datasets
 
-The project currently uses:
+The project uses:
 
-- `HaluEval QA`: main training and evaluation dataset
-- `TruthfulQA generation`: prepared for later external/generalization evaluation
+- `HaluEval QA`: main context-grounded hallucination dataset
+- `TruthfulQA generation`: no-context truthfulness dataset and external evaluation dataset
 
-Processed datasets use this shared schema:
+Processed schema:
 
 ```text
 id, dataset, task, prompt, context, answer, label, source, metadata
 ```
 
-where:
+Labels:
 
 ```text
-label = 0 -> supported / truthful
-label = 1 -> hallucinated / unsupported
+0 = supported / truthful
+1 = hallucinated / unsupported / incorrect
+```
+
+Processed files:
+
+```text
+data/processed/halueval.jsonl
+data/processed/truthfulqa.jsonl
+```
+
+Feature tables:
+
+```text
+data/processed/halueval_uncertainty_entropy_features.csv
+data/processed/truthfulqa_uncertainty_entropy_features.csv
 ```
 
 ## Repository Structure
@@ -47,14 +75,14 @@ label = 1 -> hallucinated / unsupported
 ```text
 .
 ├── data/
-│   ├── raw/                         # downloaded raw datasets
+│   ├── raw/                         # raw downloaded datasets
 │   ├── processed/                   # processed JSONL and feature tables
 │   └── README.md
 ├── docs/
 │   ├── development_log.md
 │   ├── literature/
 │   └── progress-report/
-├── models/                          # local downloaded LLM weights, ignored by Git
+├── models/                          # local LLM weights, ignored by Git
 │   └── qwen2.5-3b/
 ├── outputs/
 │   ├── figures/
@@ -62,13 +90,16 @@ label = 1 -> hallucinated / unsupported
 │   └── tables/
 ├── scripts/
 │   ├── prepare_data.sh
-│   └── evaluate.sh
+│   ├── evaluate.sh
+│   ├── evaluate_truthfulqa.sh
+│   ├── evaluate_external_truthfulqa.sh
+│   └── analyze_truthfulqa_errors.sh
 ├── src/
-│   ├── data/                        # dataset download and preprocessing
-│   ├── evaluation/                  # metrics and classifier evaluation
-│   ├── features/                    # uncertainty, consistency, RAG feature modules
+│   ├── data/                        # download and preprocessing
+│   ├── evaluation/                  # metrics, evaluation, error analysis
+│   ├── features/                    # uncertainty, consistency, RAG placeholders
 │   ├── generation/                  # Qwen scoring and feature extraction
-│   ├── models/                      # Logistic Regression, SVM, Random Forest
+│   ├── models/                      # classifier definitions
 │   └── utils/
 ├── proposal/
 ├── requirements.txt
@@ -77,7 +108,7 @@ label = 1 -> hallucinated / unsupported
 
 ## Setup
 
-Create and activate a Python environment:
+Use Python 3.11.
 
 ```bash
 python3.11 -m venv .venv
@@ -85,34 +116,30 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The project was developed with Python 3.11.
-
 ## Data Preparation
 
-Download and preprocess HaluEval QA and TruthfulQA generation:
+Download and preprocess the default datasets:
 
 ```bash
 ./scripts/prepare_data.sh
 ```
 
-Main processed files:
+This creates:
 
 ```text
 data/processed/halueval.jsonl
 data/processed/truthfulqa.jsonl
 ```
 
-## Local LLM
+## Local Qwen Model
 
-The current feature extraction uses a local Qwen model:
+The feature extractor expects local Qwen weights under:
 
 ```text
 models/qwen2.5-3b/
 ```
 
-This directory contains model weights and should not be committed to Git.
-
-If the model is not present locally, download it with Hugging Face:
+If needed, download with:
 
 ```bash
 hf download Qwen/Qwen2.5-3B \
@@ -120,9 +147,11 @@ hf download Qwen/Qwen2.5-3B \
   --local-dir models/qwen2.5-3b
 ```
 
+The root `models/` directory should not be committed to Git.
+
 ## Feature Extraction
 
-Extract uncertainty and entropy features for HaluEval:
+HaluEval:
 
 ```bash
 .venv/bin/python -m src.generation.extract_logprobs \
@@ -132,48 +161,34 @@ Extract uncertainty and entropy features for HaluEval:
   --output data/processed/halueval_uncertainty_entropy_features.csv
 ```
 
-Use a small test run before the full dataset:
+TruthfulQA:
 
 ```bash
 .venv/bin/python -m src.generation.extract_logprobs \
-  --input data/processed/halueval.jsonl \
-  --limit 10 \
+  --input data/processed/truthfulqa.jsonl \
+  --limit 0 \
   --model models/qwen2.5-3b \
-  --output data/processed/halueval_uncertainty_entropy_10.csv
+  --output data/processed/truthfulqa_uncertainty_entropy_features.csv
 ```
 
-`--limit 0` processes all examples.
+`--limit 0` means process all rows.
 
-## Classification Evaluation
+## Evaluation Commands
 
-Run the grouped 80/20 HaluEval evaluation:
+### HaluEval 80/20 Evaluation
 
 ```bash
 ./scripts/evaluate.sh
 ```
 
-or directly:
-
-```bash
-.venv/bin/python -m src.evaluation.evaluate_uncertainty_classifiers
-```
-
-The evaluator:
-
-- loads `data/processed/halueval_uncertainty_entropy_features.csv`
-- uses a group-aware 80/20 train/test split
-- keeps paired supported/hallucinated answers from the same question in the same split
-- trains Logistic Regression, Linear SVM, and Random Forest
-- writes metrics and predictions to `outputs/`
-
-Output files:
+Outputs:
 
 ```text
 outputs/tables/halueval_classifier_metrics.csv
 outputs/predictions/halueval_classifier_predictions.csv
 ```
 
-Current HaluEval 80/20 results:
+Current HaluEval results:
 
 ```text
 Logistic Regression: accuracy 0.9875, F1 0.9875, ROC-AUC 0.9986
@@ -181,36 +196,125 @@ Linear SVM:          accuracy 0.9885, F1 0.9885, ROC-AUC 0.9986
 Random Forest:       accuracy 0.9883, F1 0.9883, ROC-AUC 0.9988
 ```
 
-These results show strong separation on HaluEval QA, but they should not yet be interpreted as general hallucination detection performance across all domains.
+### TruthfulQA 80/20 Evaluation
 
-## Next Steps
+```bash
+./scripts/evaluate_truthfulqa.sh
+```
 
-Planned next development steps:
+Outputs:
 
-1. Extract the same uncertainty and entropy features for TruthfulQA.
-2. Train on HaluEval and test on TruthfulQA as an external generalization check.
-3. Add ablation experiments comparing:
-   - confidence/logprob features only
-   - entropy features only
-   - all uncertainty features
-4. Add error analysis for false positives and false negatives.
-5. Optionally add self-consistency and retrieval/evidence-agreement features if time allows.
+```text
+outputs/tables/truthfulqa_classifier_metrics.csv
+outputs/predictions/truthfulqa_classifier_predictions.csv
+```
+
+Current TruthfulQA-only results:
+
+```text
+Logistic Regression: accuracy 0.6254, F1 0.6928, ROC-AUC 0.6539
+Linear SVM:          accuracy 0.6254, F1 0.6941, ROC-AUC 0.6537
+Random Forest:       accuracy 0.6352, F1 0.6850, ROC-AUC 0.6894
+```
+
+### External Evaluation: HaluEval to TruthfulQA
+
+```bash
+./scripts/evaluate_external_truthfulqa.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_to_truthfulqa_classifier_metrics.csv
+outputs/predictions/halueval_to_truthfulqa_classifier_predictions.csv
+```
+
+Current external evaluation results:
+
+```text
+Logistic Regression: accuracy 0.4838, F1 0.6252, ROC-AUC 0.3752
+Linear SVM:          accuracy 0.4836, F1 0.6248, ROC-AUC 0.3719
+Random Forest:       accuracy 0.4902, F1 0.6311, ROC-AUC 0.3985
+```
+
+Interpretation: HaluEval-trained models do not transfer well to TruthfulQA. This is evidence of dataset shift.
+
+## Error Analysis
+
+Run:
+
+```bash
+./scripts/analyze_truthfulqa_errors.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/feature_distribution_by_dataset.csv
+outputs/tables/feature_distribution_shift.csv
+outputs/tables/truthfulqa_error_summary.csv
+outputs/predictions/truthfulqa_error_examples.csv
+```
+
+Main finding:
+
+TruthfulQA examples are more uncertain overall than HaluEval examples. Compared with HaluEval, TruthfulQA has:
+
+- higher `max_token_entropy`
+- lower `min_token_probability`
+- higher `mean_token_entropy`
+- lower `mean_token_probability`
+- higher `low_confidence_token_ratio`
+
+This explains why many correct TruthfulQA answers are predicted as hallucinated.
 
 ## Current Status
 
 Completed:
 
-- HaluEval and TruthfulQA data loading
-- normalized JSONL preprocessing
+- HaluEval and TruthfulQA preprocessing
 - Qwen-based token probability/logprob extraction
 - entropy feature extraction
-- full HaluEval uncertainty feature table
-- grouped 80/20 classification evaluation
-- Logistic Regression, Linear SVM, and Random Forest baselines
+- HaluEval feature table
+- TruthfulQA feature table
+- HaluEval grouped 80/20 evaluation
+- TruthfulQA grouped 80/20 evaluation
+- HaluEval-to-TruthfulQA external evaluation
+- feature distribution analysis
+- TruthfulQA error analysis
+- progress report
 
-In progress / remaining:
+Missing or remaining for final completion:
 
-- TruthfulQA external evaluation
 - ablation study
-- error analysis
-- final report tables and discussion
+- final visualizations
+- final error analysis write-up
+- final report discussion and limitations
+- optional improvement experiment
+
+## Remaining Work
+
+Recommended next steps:
+
+1. Run ablation experiments:
+   - confidence/logprob features only
+   - entropy features only
+   - all uncertainty features
+2. Add visualizations:
+   - confusion matrices
+   - ROC curves
+   - feature importance
+   - feature distribution plots
+3. Write final discussion:
+   - strong HaluEval performance
+   - weaker TruthfulQA performance
+   - context-grounded vs no-context detection
+   - dataset shift
+4. Optional future improvement:
+   - automatic retrieval of evidence/context before feature extraction
+   - testing a smaller or different LLM as the feature extractor
+
+## Scope Note
+
+The current model should be described as a context-grounded hallucination detector. It performs best when context is available. For no-context use cases, a future version may retrieve evidence automatically from Wikipedia, web search, or trusted domain documents before extracting uncertainty features.

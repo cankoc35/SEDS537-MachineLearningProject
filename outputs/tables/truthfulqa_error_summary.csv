@@ -1,0 +1,10 @@
+model,error_type,count,total,rate
+Linear SVM,correct,708,1132,0.6254416961130742
+Linear SVM,false_negative,136,1132,0.12014134275618374
+Linear SVM,false_positive,288,1132,0.254416961130742
+Logistic Regression,correct,708,1132,0.6254416961130742
+Logistic Regression,false_negative,139,1132,0.12279151943462897
+Logistic Regression,false_positive,285,1132,0.25176678445229683
+Random Forest,correct,719,1132,0.6351590106007067
+Random Forest,false_negative,168,1132,0.14840989399293286
+Random Forest,false_positive,245,1132,0.21643109540636044

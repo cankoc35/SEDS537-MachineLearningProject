@@ -20,6 +20,12 @@ from src.models.svm import build_linear_svm
 DEFAULT_INPUT = Path("data/processed/halueval_uncertainty_entropy_features.csv")
 DEFAULT_METRICS_OUTPUT = Path("outputs/tables/halueval_classifier_metrics.csv")
 DEFAULT_PREDICTIONS_OUTPUT = Path("outputs/predictions/halueval_classifier_predictions.csv")
+DEFAULT_EXTERNAL_METRICS_OUTPUT = Path(
+    "outputs/tables/halueval_to_truthfulqa_classifier_metrics.csv"
+)
+DEFAULT_EXTERNAL_PREDICTIONS_OUTPUT = Path(
+    "outputs/predictions/halueval_to_truthfulqa_classifier_predictions.csv"
+)
 FEATURE_COLUMNS = [
     "answer_length_tokens",
     "mean_token_probability",
@@ -47,7 +53,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--input",
         type=Path,
         default=DEFAULT_INPUT,
-        help="Feature CSV created by src.generation.extract_logprobs.",
+        help="Feature CSV used for grouped train/test evaluation.",
+    )
+    parser.add_argument(
+        "--train-input",
+        type=Path,
+        help="Feature CSV used for external evaluation training.",
+    )
+    parser.add_argument(
+        "--test-input",
+        type=Path,
+        help="Feature CSV used for external evaluation testing.",
     )
     parser.add_argument(
         "--metrics-output",
@@ -77,9 +93,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def get_group_id(example_id: str) -> str:
-    """Remove answer-type suffix so paired examples stay in the same split."""
+    """Group answers from the same original question."""
 
-    return re.sub(r"_(supported|hallucinated)$", "", example_id)
+    group_id = re.sub(r"_(supported|hallucinated)$", "", example_id)
+    group_id = re.sub(r"_(correct|incorrect)_\d+$", "", group_id)
+    return group_id
 
 
 def validate_columns(data: pd.DataFrame) -> None:
@@ -136,6 +154,7 @@ def evaluate_models(
     train_data: pd.DataFrame,
     test_data: pd.DataFrame,
     random_state: int,
+    evaluation_name: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Train all classifiers and return metrics plus predictions."""
 
@@ -156,6 +175,7 @@ def evaluate_models(
         metric_rows.append(
             {
                 "model": model_name,
+                "evaluation": evaluation_name,
                 "train_rows": len(train_data),
                 "test_rows": len(test_data),
                 **metrics,
@@ -166,7 +186,10 @@ def evaluate_models(
             prediction_rows.append(
                 {
                     "model": model_name,
+                    "evaluation": evaluation_name,
                     "id": row["id"],
+                    "dataset": row.get("dataset"),
+                    "source": row.get("source"),
                     "label": int(row["label"]),
                     "prediction": int(y_pred[row_index]),
                     "score": float(y_score[row_index]),
@@ -178,18 +201,40 @@ def evaluate_models(
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
-    data = pd.read_csv(args.input)
-    validate_columns(data)
 
-    train_data, test_data = split_train_test(
-        data=data,
-        test_size=args.test_size,
-        random_state=args.random_state,
-    )
+    if (args.train_input is None) != (args.test_input is None):
+        raise SystemExit("--train-input and --test-input must be used together.")
+
+    if args.train_input and args.test_input:
+        train_data = pd.read_csv(args.train_input)
+        test_data = pd.read_csv(args.test_input)
+        validate_columns(train_data)
+        validate_columns(test_data)
+        evaluation_name = f"{train_data['dataset'].iloc[0]}_to_{test_data['dataset'].iloc[0]}"
+
+        if args.metrics_output == DEFAULT_METRICS_OUTPUT:
+            args.metrics_output = DEFAULT_EXTERNAL_METRICS_OUTPUT
+        if args.predictions_output == DEFAULT_PREDICTIONS_OUTPUT:
+            args.predictions_output = DEFAULT_EXTERNAL_PREDICTIONS_OUTPUT
+
+        print(f"Loaded {len(train_data)} train rows from {args.train_input}")
+        print(f"Loaded {len(test_data)} test rows from {args.test_input}")
+    else:
+        data = pd.read_csv(args.input)
+        validate_columns(data)
+        train_data, test_data = split_train_test(
+            data=data,
+            test_size=args.test_size,
+            random_state=args.random_state,
+        )
+        evaluation_name = "grouped_80_20"
+        print(f"Loaded {len(data)} rows from {args.input}")
+
     metrics, predictions = evaluate_models(
         train_data=train_data,
         test_data=test_data,
         random_state=args.random_state,
+        evaluation_name=evaluation_name,
     )
 
     args.metrics_output.parent.mkdir(parents=True, exist_ok=True)
@@ -197,7 +242,6 @@ def main(argv: list[str] | None = None) -> None:
     metrics.to_csv(args.metrics_output, index=False)
     predictions.to_csv(args.predictions_output, index=False)
 
-    print(f"Loaded {len(data)} rows from {args.input}")
     print(f"Train rows: {len(train_data)}")
     print(f"Test rows: {len(test_data)}")
     print(metrics.to_string(index=False))

@@ -124,3 +124,154 @@ The next development milestone is feature extraction:
 - Created concise review notes:
   - `docs/literature/literature_review_notes.md`
 - Noted that the original TruthfulQA benchmark paper and SelfCheckGPT paper should be added if possible because they are important for the final literature review.
+
+## May 13, 2026
+
+Today we extended the project from HaluEval-only evaluation to TruthfulQA evaluation and error analysis.
+
+### TruthfulQA Feature Table Ready
+
+- Confirmed that uncertainty and entropy features were extracted for TruthfulQA:
+  - `data/processed/truthfulqa_uncertainty_entropy_features.csv`
+- The feature table contains 5,918 examples:
+  - 2,600 correct/truthful answers with `label = 0`
+  - 3,318 incorrect/false answers with `label = 1`
+- The feature columns match the HaluEval uncertainty feature table, so the same classifiers can be reused.
+
+### External Evaluation: Train on HaluEval, Test on TruthfulQA
+
+- Updated `src/evaluation/evaluate_uncertainty_classifiers.py` to support external evaluation with:
+  - `--train-input`
+  - `--test-input`
+- Added:
+  - `scripts/evaluate_external_truthfulqa.sh`
+- Ran the experiment:
+  - train set: HaluEval, 20,000 rows
+  - test set: TruthfulQA, 5,918 rows
+- Results:
+
+```text
+Logistic Regression: accuracy 0.4838, F1 0.6252, ROC-AUC 0.3752
+Linear SVM:          accuracy 0.4836, F1 0.6248, ROC-AUC 0.3719
+Random Forest:       accuracy 0.4902, F1 0.6311, ROC-AUC 0.3985
+```
+
+- Interpretation:
+  - The HaluEval-trained detector does not transfer well to TruthfulQA.
+  - This suggests that the very high HaluEval results are partly dataset-specific.
+  - TruthfulQA uses a different task structure: no context passage, misconception-style questions, and multiple correct/incorrect answer candidates per question.
+
+### TruthfulQA-Only Evaluation
+
+- Updated grouped splitting so TruthfulQA answers from the same original question stay in the same split.
+  - Example: `truthfulqa_000000_correct_0` and `truthfulqa_000000_incorrect_6` are grouped as `truthfulqa_000000`.
+- Added:
+  - `scripts/evaluate_truthfulqa.sh`
+- Ran grouped 80/20 train-test evaluation on TruthfulQA only:
+  - train rows: 4,786
+  - test rows: 1,132
+- Results:
+
+```text
+Logistic Regression: accuracy 0.6254, F1 0.6928, ROC-AUC 0.6539
+Linear SVM:          accuracy 0.6254, F1 0.6941, ROC-AUC 0.6537
+Random Forest:       accuracy 0.6352, F1 0.6850, ROC-AUC 0.6894
+```
+
+- Interpretation:
+  - Uncertainty features are useful on TruthfulQA, but much weaker than on HaluEval.
+  - Random Forest gives the best ROC-AUC on TruthfulQA-only evaluation.
+  - The results support the conclusion that TruthfulQA is a harder and structurally different evaluation dataset.
+
+### Feature Distribution and Error Analysis
+
+- Replaced the placeholder `src/evaluation/error_analysis.py` with a working analysis script.
+- Added:
+  - `scripts/analyze_truthfulqa_errors.sh`
+- Generated:
+  - `outputs/tables/feature_distribution_by_dataset.csv`
+  - `outputs/tables/feature_distribution_shift.csv`
+  - `outputs/tables/truthfulqa_error_summary.csv`
+  - `outputs/predictions/truthfulqa_error_examples.csv`
+
+### Main Distribution-Shift Finding
+
+- TruthfulQA examples are more uncertain overall than HaluEval examples.
+- Largest shifts:
+
+```text
+max_token_entropy:          HaluEval 2.3049 -> TruthfulQA 3.3386
+min_token_probability:      HaluEval 0.2433 -> TruthfulQA 0.0321
+mean_token_entropy:         HaluEval 0.8602 -> TruthfulQA 1.3642
+mean_token_probability:     HaluEval 0.6854 -> TruthfulQA 0.5267
+low_confidence_token_ratio: HaluEval 0.1502 -> TruthfulQA 0.2977
+negative_mean_logprob:      HaluEval 1.0772 -> TruthfulQA 1.9594
+```
+
+- This explains why TruthfulQA performance is lower:
+  - many correct TruthfulQA answers still look uncertain to Qwen
+  - some incorrect misconception answers look plausible and receive relatively confident scores
+  - the decision boundary learned from HaluEval does not match TruthfulQA well
+
+### TruthfulQA Error Pattern
+
+- TruthfulQA-only error analysis showed many false positives.
+- False positive rates on the TruthfulQA test split:
+
+```text
+Logistic Regression: 285 / 1132
+Linear SVM:          288 / 1132
+Random Forest:       245 / 1132
+```
+
+- False positives are correct answers predicted as hallucinated.
+- This supports the finding that correct TruthfulQA answers often have higher uncertainty than supported HaluEval answers.
+
+### Current Conclusion
+
+- HaluEval-only performance is very strong, but it should not be overclaimed.
+- TruthfulQA experiments show limited cross-dataset generalization.
+- The project now has a more realistic story:
+  - uncertainty features work very well on HaluEval QA
+  - they are moderately useful on TruthfulQA
+  - dataset shift is a major challenge
+
+### Next Step
+
+- Run ablation experiments:
+  - confidence/logprob features only
+  - entropy features only
+  - all uncertainty features
+- Use ablation to understand which feature groups are responsible for performance on HaluEval and TruthfulQA.
+
+### Context Requirement and Future Retrieval Direction
+
+- Discussed an important limitation of the current strongest setup:
+  - the HaluEval-trained model works best when a context/evidence passage is available
+  - the classifier itself does not directly use raw context text
+  - however, context affects the uncertainty features because Qwen scores the answer conditioned on `context + question + answer`
+- This means the current high-performing detector is best described as a context-grounded hallucination detector.
+- For use cases where only `question + answer` is available, performance is weaker, as seen in TruthfulQA.
+- A no-context detector is possible, but it becomes open-domain truthfulness detection and depends heavily on the feature extractor model's internal knowledge and calibration.
+
+Possible future solution:
+
+- Add automatic evidence retrieval before feature extraction.
+- Pipeline idea:
+
+```text
+question + answer
+-> retrieve evidence/context from a trusted source
+-> build context + question + answer input
+-> extract Qwen uncertainty features
+-> classify supported vs hallucinated
+```
+
+- The context should ideally come from an external source, not be invented by the LLM.
+- Possible evidence sources:
+  - Wikipedia for general factual questions
+  - web search for broader but noisier coverage
+  - domain-specific trusted documents for specialized tasks
+  - dataset-provided context when available
+- This would make the system more convenient because the user would not need to manually provide context, while still keeping the detector evidence-grounded.
+- Current project scope will likely keep retrieval as future work unless time allows.
