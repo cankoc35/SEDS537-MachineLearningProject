@@ -366,3 +366,20 @@ ROC-AUC:  0.4391
   - final error analysis write-up
   - final report discussion and limitations
   - optional improvement experiment if time allows
+
+### Presentation Note: Feature Extractor Model Size
+
+- Started testing a smaller feature extractor, `Qwen/Qwen2.5-0.5B`, in addition to the main `Qwen/Qwen2.5-3B` setup.
+- Initial one-example check shows that the smaller model is more uncertain even on a supported HaluEval answer:
+
+```text
+Qwen2.5-3B:   Arthur token probability about 0.92
+Qwen2.5-0.5B: Arthur token probability about 0.71
+```
+
+- This suggests that the quality and calibration of the LLM used for feature extraction can affect the downstream hallucination detector.
+- Presentation wording:
+
+```text
+The feature extractor matters. A smaller LLM can be less confident and less calibrated, which may make hallucination detection harder. Larger or better-calibrated LLMs may provide stronger uncertainty features, but this should be verified experimentally.
+```
