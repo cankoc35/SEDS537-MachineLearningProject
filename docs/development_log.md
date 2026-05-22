@@ -275,3 +275,94 @@ question + answer
   - dataset-provided context when available
 - This would make the system more convenient because the user would not need to manually provide context, while still keeping the detector evidence-grounded.
 - Current project scope will likely keep retrieval as future work unless time allows.
+
+## May 21, 2026
+
+Today we implemented and ran the ablation study for the uncertainty feature groups.
+
+### Ablation Implementation
+
+- Replaced the placeholder `src/evaluation/ablation.py` with a working ablation pipeline.
+- Added:
+  - `scripts/run_ablation.sh`
+- The ablation compares three feature groups:
+  - `confidence_logprob`: answer length plus token probability/log-probability features
+  - `entropy`: answer length plus token entropy features
+  - `all_features`: confidence/log-probability plus entropy features
+- The ablation is run for three settings:
+  - HaluEval grouped 80/20
+  - TruthfulQA grouped 80/20
+  - train on HaluEval, test on TruthfulQA
+
+### Ablation Output Files
+
+- Generated:
+  - `outputs/tables/halueval_ablation_results.csv`
+  - `outputs/tables/truthfulqa_ablation_results.csv`
+  - `outputs/tables/halueval_to_truthfulqa_ablation_results.csv`
+
+### HaluEval Ablation Findings
+
+- Best HaluEval result:
+
+```text
+All features + Linear SVM
+Accuracy: 0.9885
+F1:       0.9885
+ROC-AUC:  0.9986
+```
+
+- Summary:
+  - confidence/logprob-only features are already very strong
+  - entropy-only features are useful but weaker
+  - all features together give the best overall HaluEval performance
+
+### TruthfulQA Ablation Findings
+
+- Best TruthfulQA ROC-AUC:
+
+```text
+All features + Random Forest
+Accuracy: 0.6352
+F1:       0.6850
+ROC-AUC:  0.6894
+```
+
+- Summary:
+  - TruthfulQA remains harder than HaluEval
+  - confidence/logprob and entropy features both provide useful signal
+  - all features are the safest main setting
+
+### HaluEval to TruthfulQA Transfer Ablation
+
+- Best transfer F1:
+
+```text
+Entropy only + Random Forest
+Accuracy: 0.5035
+F1:       0.6451
+ROC-AUC:  0.4391
+```
+
+- Summary:
+  - entropy-only transfers slightly better than all features in this setting
+  - however, all transfer results remain weak
+  - the main issue is still dataset shift between HaluEval and TruthfulQA
+
+### Current Ablation Conclusion
+
+- We should continue using all features as the main method.
+- Ablation shows that:
+  - confidence/logprob features are the strongest signal on HaluEval
+  - entropy adds useful complementary information
+  - all features perform best within the same dataset
+  - cross-dataset generalization remains weak because HaluEval and TruthfulQA have different uncertainty patterns
+
+### Updated Completion Status
+
+- Ablation study is now completed.
+- Remaining work:
+  - visualizations
+  - final error analysis write-up
+  - final report discussion and limitations
+  - optional improvement experiment if time allows

@@ -93,6 +93,7 @@ data/processed/truthfulqa_uncertainty_entropy_features.csv
 │   ├── evaluate.sh
 │   ├── evaluate_truthfulqa.sh
 │   ├── evaluate_external_truthfulqa.sh
+│   ├── run_ablation.sh
 │   └── analyze_truthfulqa_errors.sh
 ├── src/
 │   ├── data/                        # download and preprocessing
@@ -269,6 +270,43 @@ TruthfulQA examples are more uncertain overall than HaluEval examples. Compared 
 
 This explains why many correct TruthfulQA answers are predicted as hallucinated.
 
+## Ablation Study
+
+Run:
+
+```bash
+./scripts/run_ablation.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_ablation_results.csv
+outputs/tables/truthfulqa_ablation_results.csv
+outputs/tables/halueval_to_truthfulqa_ablation_results.csv
+```
+
+Feature groups:
+
+```text
+confidence_logprob = answer length + probability/log-probability features
+entropy = answer length + entropy features
+all_features = confidence/logprob + entropy features
+```
+
+Main ablation findings:
+
+- HaluEval: all features perform best.
+- TruthfulQA: all features are generally best, but performance remains moderate.
+- HaluEval -> TruthfulQA: entropy-only transfers slightly better, but all transfer results are weak.
+
+Final decision:
+
+```text
+Use all features as the main method.
+Use ablation results to explain feature contribution and dataset shift.
+```
+
 ## Current Status
 
 Completed:
@@ -283,11 +321,11 @@ Completed:
 - HaluEval-to-TruthfulQA external evaluation
 - feature distribution analysis
 - TruthfulQA error analysis
+- ablation study
 - progress report
 
 Missing or remaining for final completion:
 
-- ablation study
 - final visualizations
 - final error analysis write-up
 - final report discussion and limitations
@@ -297,21 +335,17 @@ Missing or remaining for final completion:
 
 Recommended next steps:
 
-1. Run ablation experiments:
-   - confidence/logprob features only
-   - entropy features only
-   - all uncertainty features
-2. Add visualizations:
+1. Add visualizations:
    - confusion matrices
    - ROC curves
    - feature importance
    - feature distribution plots
-3. Write final discussion:
+2. Write final discussion:
    - strong HaluEval performance
    - weaker TruthfulQA performance
    - context-grounded vs no-context detection
    - dataset shift
-4. Optional future improvement:
+3. Optional future improvement:
    - automatic retrieval of evidence/context before feature extraction
    - testing a smaller or different LLM as the feature extractor
 
