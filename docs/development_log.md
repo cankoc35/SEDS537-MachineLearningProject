@@ -383,3 +383,25 @@ Qwen2.5-0.5B: Arthur token probability about 0.71
 ```text
 The feature extractor matters. A smaller LLM can be less confident and less calibrated, which may make hallucination detection harder. Larger or better-calibrated LLMs may provide stronger uncertainty features, but this should be verified experimentally.
 ```
+
+### Presentation Note: 0.5B Ablation Findings
+
+- Ran the same ablation setup with `Qwen/Qwen2.5-0.5B` feature tables.
+- Same-dataset results still favor using all uncertainty features:
+
+```text
+HaluEval 0.5B:   all features + Random Forest, F1 0.9745, ROC-AUC 0.9938
+TruthfulQA 0.5B: all features + Random Forest, F1 0.6981, ROC-AUC 0.6898
+```
+
+- Cross-dataset transfer still remains weak, but entropy-only features transferred slightly better:
+
+```text
+HaluEval -> TruthfulQA 0.5B: entropy only + Random Forest, F1 0.6557, ROC-AUC 0.4527
+```
+
+- Presentation wording:
+
+```text
+The ablation results show that all features are best for same-dataset evaluation, while entropy-only features are slightly more robust when transferring from HaluEval to TruthfulQA. However, transfer performance is still weak, so dataset shift remains the main limitation.
+```
