@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{float}
+
+\title{LLM Hallucination Detection via Uncertainty}
+\author{SEDS 537 Machine Learning Term Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% TODO: Write a short summary of the problem, method, datasets, main results, and conclusion.
+\end{abstract}
+
+\section{Introduction}
+% TODO: Explain hallucination in LLMs, why it matters, and the goal of this project.
+
+\section{Related Work}
+% TODO: Summarize the most relevant papers: HaluEval, TruthfulQA, uncertainty, entropy, and hallucination detection.
+
+\section{Datasets and Preprocessing}
+% TODO: Explain HaluEval QA and TruthfulQA generation.
+% TODO: Describe the binary label format and processed schema.
+
+\section{Methodology}
+
+\subsection{Uncertainty Feature Extraction}
+% TODO: Explain how Qwen scores context/question/answer token probabilities.
+% TODO: Explain probability, log-probability, low-confidence ratio, and entropy features.
+
+\subsection{Feature Extractor Models}
+% TODO: Explain why Qwen2.5-3B is the main extractor and Qwen2.5-0.5B is used for comparison.
+
+\subsection{Classification Models}
+% TODO: Explain Logistic Regression, Linear SVM, and Random Forest.
+
+\section{Experimental Setup}
+% TODO: Describe grouped 80/20 split, grouped 5-fold cross-validation, external transfer, and ablation setup.
+
+\section{Results}
+
+\subsection{Grouped 80/20 Evaluation}
+% TODO: Present HaluEval, TruthfulQA, and HaluEval-to-TruthfulQA results.
+
+\subsection{Grouped Cross-Validation}
+% TODO: Present 3B vs 0.5B cross-validation results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../outputs/figures/cv_model_size_comparison.png}
+    \caption{Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors.}
+    \label{fig:cv-model-size}
+\end{figure}
+
+\subsection{ROC Curves}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../outputs/figures/roc_curves.png}
+    \caption{ROC curves for the best grouped 80/20 models.}
+    \label{fig:roc-curves}
+\end{figure}
+
+\section{Ablation Study}
+% TODO: Compare confidence/logprob features, entropy features, and all features.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../outputs/figures/ablation_feature_group_comparison.png}
+    \caption{Ablation comparison across confidence/log-probability, entropy, and all feature groups.}
+    \label{fig:ablation}
+\end{figure}
+
+\section{Error Analysis}
+% TODO: Explain confusion matrices and feature distribution shift.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../outputs/figures/confusion_matrices.png}
+    \caption{Confusion matrices for the best grouped 80/20 classifiers.}
+    \label{fig:confusion}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../outputs/figures/feature_distribution_shift.png}
+    \caption{Selected uncertainty feature means by dataset and label.}
+    \label{fig:feature-shift}
+\end{figure}
+
+\section{Discussion and Limitations}
+% TODO: Discuss strong HaluEval performance, weaker TruthfulQA performance, dataset shift, and context dependence.
+
+\section{Conclusion}
+% TODO: Summarize the final findings and future work.
+
+\bibliographystyle{plain}
+% TODO: Add references in a .bib file later if needed.
+
+\end{document}
