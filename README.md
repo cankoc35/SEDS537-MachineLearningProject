@@ -6,7 +6,7 @@ The project studies hallucination detection as a binary classification task. Giv
 
 ## Project Aim
 
-The aim is to detect hallucinated LLM answers using uncertainty signals extracted from an open-source LLM. The current implementation uses `Qwen/Qwen2.5-3B` as a feature extractor. Qwen is not asked to judge hallucination directly. Instead, the code reads Qwen's token-level probability distribution for a given answer and computes numeric uncertainty features.
+The aim is to detect hallucinated LLM answers using uncertainty signals extracted from open-source LLMs. The current implementation uses `Qwen/Qwen2.5-3B` as the main feature extractor and `Qwen/Qwen2.5-0.5B` as a smaller comparison model. Qwen is not asked to judge hallucination directly. Instead, the code reads Qwen's token-level probability distribution for a given answer and computes numeric uncertainty features.
 
 Current feature groups:
 
@@ -68,6 +68,8 @@ Feature tables:
 ```text
 data/processed/halueval_uncertainty_entropy_features.csv
 data/processed/truthfulqa_uncertainty_entropy_features.csv
+data/processed/halueval_uncertainty_entropy_qwen05b_features.csv
+data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
 ```
 
 ## Repository Structure
@@ -93,7 +95,11 @@ data/processed/truthfulqa_uncertainty_entropy_features.csv
 │   ├── evaluate.sh
 │   ├── evaluate_truthfulqa.sh
 │   ├── evaluate_external_truthfulqa.sh
+│   ├── evaluate_qwen05b.sh
 │   ├── run_ablation.sh
+│   ├── run_ablation_qwen05b.sh
+│   ├── run_cross_validation.sh
+│   ├── create_figures.sh
 │   └── analyze_truthfulqa_errors.sh
 ├── src/
 │   ├── data/                        # download and preprocessing
@@ -138,6 +144,7 @@ The feature extractor expects local Qwen weights under:
 
 ```text
 models/qwen2.5-3b/
+models/qwen2.5-0.5b/
 ```
 
 If needed, download with:
@@ -146,6 +153,14 @@ If needed, download with:
 hf download Qwen/Qwen2.5-3B \
   --repo-type model \
   --local-dir models/qwen2.5-3b
+```
+
+Smaller comparison model:
+
+```bash
+hf download Qwen/Qwen2.5-0.5B \
+  --repo-type model \
+  --local-dir models/qwen2.5-0.5b
 ```
 
 The root `models/` directory should not be committed to Git.
@@ -173,6 +188,19 @@ TruthfulQA:
 ```
 
 `--limit 0` means process all rows.
+
+For the 0.5B comparison, use the same commands with:
+
+```text
+--model models/qwen2.5-0.5b
+```
+
+and write to:
+
+```text
+data/processed/halueval_uncertainty_entropy_qwen05b_features.csv
+data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
+```
 
 ## Evaluation Commands
 
@@ -241,6 +269,60 @@ Random Forest:       accuracy 0.4902, F1 0.6311, ROC-AUC 0.3985
 
 Interpretation: HaluEval-trained models do not transfer well to TruthfulQA. This is evidence of dataset shift.
 
+### Qwen2.5-0.5B Evaluation
+
+```bash
+./scripts/evaluate_qwen05b.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_qwen05b_classifier_metrics.csv
+outputs/tables/truthfulqa_qwen05b_classifier_metrics.csv
+outputs/tables/halueval_to_truthfulqa_qwen05b_classifier_metrics.csv
+```
+
+Main 0.5B results:
+
+```text
+HaluEval 80/20 best:        Random Forest, F1 0.9745, ROC-AUC 0.9938
+TruthfulQA 80/20 best:      Random Forest, F1 0.6981, ROC-AUC 0.6898
+HaluEval -> TruthfulQA:     Random Forest, F1 0.6388, ROC-AUC 0.4000
+```
+
+The smaller feature extractor remains useful, but it is weaker than 3B on HaluEval.
+
+## Cross-Validation
+
+Run grouped 5-fold cross-validation:
+
+```bash
+./scripts/run_cross_validation.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_qwen3b_cv_summary.csv
+outputs/tables/truthfulqa_qwen3b_cv_summary.csv
+outputs/tables/halueval_qwen05b_cv_summary.csv
+outputs/tables/truthfulqa_qwen05b_cv_summary.csv
+```
+
+Grouped cross-validation keeps all answers from the same original question in the same fold. This prevents train-test leakage.
+
+Main CV findings:
+
+```text
+Qwen2.5-3B   HaluEval:   best ROC-AUC 0.9986, F1 about 0.9871
+Qwen2.5-0.5B HaluEval:   best ROC-AUC 0.9945, F1 about 0.9746
+Qwen2.5-3B   TruthfulQA: best ROC-AUC 0.6836, F1 about 0.6968
+Qwen2.5-0.5B TruthfulQA: best ROC-AUC 0.6841, F1 about 0.7006
+```
+
+The CV results confirm the original 80/20 pattern: HaluEval is much easier than TruthfulQA.
+
 ## Error Analysis
 
 Run:
@@ -278,12 +360,21 @@ Run:
 ./scripts/run_ablation.sh
 ```
 
+For the 0.5B feature tables:
+
+```bash
+./scripts/run_ablation_qwen05b.sh
+```
+
 Outputs:
 
 ```text
 outputs/tables/halueval_ablation_results.csv
 outputs/tables/truthfulqa_ablation_results.csv
 outputs/tables/halueval_to_truthfulqa_ablation_results.csv
+outputs/tables/halueval_qwen05b_ablation_results.csv
+outputs/tables/truthfulqa_qwen05b_ablation_results.csv
+outputs/tables/halueval_to_truthfulqa_qwen05b_ablation_results.csv
 ```
 
 Feature groups:
@@ -299,6 +390,7 @@ Main ablation findings:
 - HaluEval: all features perform best.
 - TruthfulQA: all features are generally best, but performance remains moderate.
 - HaluEval -> TruthfulQA: entropy-only transfers slightly better, but all transfer results are weak.
+- The same pattern appears with the 0.5B feature extractor.
 
 Final decision:
 
@@ -306,6 +398,26 @@ Final decision:
 Use all features as the main method.
 Use ablation results to explain feature contribution and dataset shift.
 ```
+
+## Visualizations
+
+Generate report figures:
+
+```bash
+./scripts/create_figures.sh
+```
+
+Outputs:
+
+```text
+outputs/figures/cv_model_size_comparison.png
+outputs/figures/ablation_feature_group_comparison.png
+outputs/figures/confusion_matrices.png
+outputs/figures/roc_curves.png
+outputs/figures/feature_distribution_shift.png
+```
+
+These figures summarize model-size comparison, feature ablation, classification errors, ROC curves, and feature distribution shift.
 
 ## Current Status
 
@@ -316,38 +428,38 @@ Completed:
 - entropy feature extraction
 - HaluEval feature table
 - TruthfulQA feature table
+- Qwen2.5-0.5B feature tables
 - HaluEval grouped 80/20 evaluation
 - TruthfulQA grouped 80/20 evaluation
 - HaluEval-to-TruthfulQA external evaluation
+- Qwen2.5-0.5B grouped and external evaluation
+- grouped 5-fold cross-validation
 - feature distribution analysis
 - TruthfulQA error analysis
 - ablation study
+- Qwen2.5-0.5B ablation study
+- visualizations
 - progress report
 
 Missing or remaining for final completion:
 
-- final visualizations
 - final error analysis write-up
 - final report discussion and limitations
-- optional improvement experiment
+- optional improvement experiment or future-work discussion
 
 ## Remaining Work
 
 Recommended next steps:
 
-1. Add visualizations:
-   - confusion matrices
-   - ROC curves
-   - feature importance
-   - feature distribution plots
-2. Write final discussion:
+1. Write final discussion:
    - strong HaluEval performance
    - weaker TruthfulQA performance
    - context-grounded vs no-context detection
    - dataset shift
+2. Use generated figures in the final report and presentation.
 3. Optional future improvement:
    - automatic retrieval of evidence/context before feature extraction
-   - testing a smaller or different LLM as the feature extractor
+   - testing a different LLM family as the feature extractor
 
 ## Scope Note
 

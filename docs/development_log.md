@@ -405,3 +405,121 @@ HaluEval -> TruthfulQA 0.5B: entropy only + Random Forest, F1 0.6557, ROC-AUC 0.
 ```text
 The ablation results show that all features are best for same-dataset evaluation, while entropy-only features are slightly more robust when transferring from HaluEval to TruthfulQA. However, transfer performance is still weak, so dataset shift remains the main limitation.
 ```
+
+## May 22, 2026
+
+Today we completed the model-size comparison, grouped cross-validation, 0.5B ablation, and visualization stage.
+
+### Qwen2.5-0.5B Feature Tables
+
+- Confirmed that uncertainty and entropy feature extraction was completed with the smaller `Qwen/Qwen2.5-0.5B` model.
+- Added feature tables:
+  - `data/processed/halueval_uncertainty_entropy_qwen05b_features.csv`
+  - `data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv`
+- This allows comparison between the main `Qwen/Qwen2.5-3B` feature extractor and a much smaller model.
+
+### Qwen2.5-0.5B Evaluation
+
+- Added:
+  - `scripts/evaluate_qwen05b.sh`
+- Ran grouped 80/20 evaluation for:
+  - HaluEval with 0.5B features
+  - TruthfulQA with 0.5B features
+  - HaluEval-to-TruthfulQA transfer with 0.5B features
+- Generated:
+  - `outputs/tables/halueval_qwen05b_classifier_metrics.csv`
+  - `outputs/tables/truthfulqa_qwen05b_classifier_metrics.csv`
+  - `outputs/tables/halueval_to_truthfulqa_qwen05b_classifier_metrics.csv`
+
+Main 0.5B results:
+
+```text
+HaluEval 0.5B:              Random Forest, F1 0.9745, ROC-AUC 0.9938
+TruthfulQA 0.5B:            Random Forest, F1 0.6981, ROC-AUC 0.6898
+HaluEval -> TruthfulQA 0.5B: Random Forest, F1 0.6388, ROC-AUC 0.4000
+```
+
+### Grouped Cross-Validation
+
+- Added:
+  - `src/evaluation/cross_validation.py`
+  - `scripts/run_cross_validation.sh`
+- Ran grouped 5-fold cross-validation for:
+  - Qwen2.5-3B HaluEval
+  - Qwen2.5-3B TruthfulQA
+  - Qwen2.5-0.5B HaluEval
+  - Qwen2.5-0.5B TruthfulQA
+- Grouped CV keeps all answers from the same original question in the same fold, which prevents train-test leakage.
+
+Main grouped CV findings:
+
+```text
+Qwen2.5-3B   HaluEval:   best ROC-AUC 0.9986, F1 about 0.9871
+Qwen2.5-0.5B HaluEval:   best ROC-AUC 0.9945, F1 about 0.9746
+Qwen2.5-3B   TruthfulQA: best ROC-AUC 0.6836, F1 about 0.6968
+Qwen2.5-0.5B TruthfulQA: best ROC-AUC 0.6841, F1 about 0.7006
+```
+
+Interpretation:
+
+- Cross-validation confirms the earlier 80/20 result pattern.
+- HaluEval remains much easier than TruthfulQA.
+- The 3B extractor is better on HaluEval.
+- On TruthfulQA, 3B and 0.5B are very similar, so the main issue is dataset structure and lack of context rather than only model size.
+
+### Qwen2.5-0.5B Ablation
+
+- Added:
+  - `scripts/run_ablation_qwen05b.sh`
+- Ran the same ablation feature groups for the 0.5B feature tables:
+  - confidence/logprob
+  - entropy
+  - all features
+- Generated:
+  - `outputs/tables/halueval_qwen05b_ablation_results.csv`
+  - `outputs/tables/truthfulqa_qwen05b_ablation_results.csv`
+  - `outputs/tables/halueval_to_truthfulqa_qwen05b_ablation_results.csv`
+
+Main 0.5B ablation findings:
+
+```text
+HaluEval 0.5B:   all features + Random Forest, F1 0.9745, ROC-AUC 0.9938
+TruthfulQA 0.5B: all features + Random Forest, F1 0.6981, ROC-AUC 0.6898
+Transfer 0.5B:   entropy only + Random Forest, F1 0.6557, ROC-AUC 0.4527
+```
+
+Conclusion:
+
+- Same-dataset evaluation still favors all features.
+- Entropy-only features transfer slightly better from HaluEval to TruthfulQA.
+- Transfer performance remains weak overall, so dataset shift is still the main limitation.
+
+### Visualizations
+
+- Added:
+  - `src/evaluation/visualize_results.py`
+  - `scripts/create_figures.sh`
+- Generated report/presentation figures:
+  - `outputs/figures/cv_model_size_comparison.png`
+  - `outputs/figures/ablation_feature_group_comparison.png`
+  - `outputs/figures/confusion_matrices.png`
+  - `outputs/figures/roc_curves.png`
+  - `outputs/figures/feature_distribution_shift.png`
+- Updated `.gitignore` to ignore local Matplotlib cache folders.
+
+### Current Status
+
+- The experimental pipeline is now largely complete.
+- Completed:
+  - preprocessing
+  - uncertainty and entropy feature extraction
+  - 3B and 0.5B feature extraction
+  - grouped 80/20 evaluation
+  - grouped 5-fold cross-validation
+  - external HaluEval-to-TruthfulQA evaluation
+  - ablation
+  - visualizations
+- Remaining work:
+  - final report write-up
+  - final presentation preparation
+  - limitations and future-work discussion
