@@ -607,3 +607,26 @@ TruthfulQA is harder because it tests open-domain truthfulness without supportin
 - The method works best in context-grounded HaluEval.
 - HaluEval no-context shows that context matters, but dataset-specific patterns also make HaluEval easier than TruthfulQA.
 - TruthfulQA remains the stronger test of open-domain truthfulness generalization.
+
+### Presentation Note: Why TruthfulQA Is Tricky
+
+- The original TruthfulQA paper shows that TruthfulQA is intentionally difficult because it targets common misconceptions, myths, stereotypes, and conspiracy-like false beliefs.
+- The benchmark is not normal factual QA. It is designed to test whether models imitate falsehoods that are common in human text.
+- Important paper findings:
+
+```text
+Best main model: GPT-3 175B with helpful prompt, about 58% truthful
+Human baseline: about 94% truthful
+Default GPT-3 scaling: larger models often became more informative but less truthful
+```
+
+- This supports our lower TruthfulQA scores.
+- In TruthfulQA, false answers can be familiar and likely under the language model.
+- Correct answers often reject common myths, so they may sound less familiar and receive lower confidence.
+- Therefore, token confidence and entropy separate labels less cleanly than in HaluEval.
+
+Presentation wording:
+
+```text
+TruthfulQA is difficult because it was designed to trigger imitative falsehoods. A false answer can be a common myth that the model has seen many times, so it may receive high confidence. A correct answer may reject the myth and sound less familiar. This explains why uncertainty-only features perform much worse on TruthfulQA than on HaluEval.
+```

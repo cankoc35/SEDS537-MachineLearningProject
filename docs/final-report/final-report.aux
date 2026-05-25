@@ -2,31 +2,53 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{li2023halueval}
+\citation{lin2022truthfulqa}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{2}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Datasets and Preprocessing}{2}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Methodology}{2}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Uncertainty Feature Extraction}{2}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Feature Extractor Models}{2}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Classification Models}{2}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup}{2}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{2}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Grouped 80/20 Evaluation}{2}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Grouped Cross-Validation}{2}{subsection.6.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors.}}{2}{figure.1}\protected@file@percent }
-\newlabel{fig:cv-model-size}{{1}{2}{Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}ROC Curves}{3}{subsection.6.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces ROC curves for the best grouped 80/20 models.}}{3}{figure.2}\protected@file@percent }
-\newlabel{fig:roc-curves}{{2}{3}{ROC curves for the best grouped 80/20 models}{figure.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Ablation Study}{4}{section.7}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Ablation comparison across confidence/log-probability, entropy, and all feature groups.}}{4}{figure.3}\protected@file@percent }
-\newlabel{fig:ablation}{{3}{4}{Ablation comparison across confidence/log-probability, entropy, and all feature groups}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Error Analysis}{5}{section.8}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Confusion matrices for the best grouped 80/20 classifiers.}}{5}{figure.4}\protected@file@percent }
-\newlabel{fig:confusion}{{4}{5}{Confusion matrices for the best grouped 80/20 classifiers}{figure.4}{}}
+\citation{duan2023strongerfocus}
+\citation{calibration2025halueval}
+\citation{farquhar2024semanticentropy}
+\citation{kossen2024semanticprobes}
+\citation{friel2023chainpoll}
+\citation{chen2025belief}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Datasets and Preprocessing}{4}{section.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Processed datasets used in the experiments.}}{5}{table.1}\protected@file@percent }
+\newlabel{tab:processed-datasets}{{1}{5}{Processed datasets used in the experiments}{table.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Methodology}{6}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Uncertainty Feature Extraction}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Feature Extractor Models}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Classification Models}{6}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup}{6}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{6}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Grouped 80/20 Evaluation}{6}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Grouped Cross-Validation}{6}{subsection.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors.}}{6}{figure.1}\protected@file@percent }
+\newlabel{fig:cv-model-size}{{1}{6}{Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Context Ablation: HaluEval With and Without Context}{7}{subsection.6.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Effect of context on grouped cross-validation F1 scores. HaluEval with context performs best, HaluEval without context drops but remains strong, and TruthfulQA remains the hardest no-context setting.}}{7}{figure.2}\protected@file@percent }
+\newlabel{fig:context-effect}{{2}{7}{Effect of context on grouped cross-validation F1 scores. HaluEval with context performs best, HaluEval without context drops but remains strong, and TruthfulQA remains the hardest no-context setting}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}ROC Curves}{8}{subsection.6.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces ROC curves for the best grouped 80/20 models.}}{8}{figure.3}\protected@file@percent }
+\newlabel{fig:roc-curves}{{3}{8}{ROC curves for the best grouped 80/20 models}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Ablation Study}{9}{section.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Ablation comparison across confidence/log-probability, entropy, and all feature groups.}}{9}{figure.4}\protected@file@percent }
+\newlabel{fig:ablation}{{4}{9}{Ablation comparison across confidence/log-probability, entropy, and all feature groups}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Error Analysis}{10}{section.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Confusion matrices for the best grouped 80/20 classifiers.}}{10}{figure.5}\protected@file@percent }
+\newlabel{fig:confusion}{{5}{10}{Confusion matrices for the best grouped 80/20 classifiers}{figure.5}{}}
 \bibstyle{plain}
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Selected uncertainty feature means by dataset and label.}}{6}{figure.5}\protected@file@percent }
-\newlabel{fig:feature-shift}{{5}{6}{Selected uncertainty feature means by dataset and label}{figure.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Discussion and Limitations}{6}{section.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{6}{section.10}\protected@file@percent }
-\gdef \@abspage@last{6}
+\bibdata{references}
+\bibcite{calibration2025halueval}{1}
+\bibcite{chen2025belief}{2}
+\bibcite{duan2023strongerfocus}{3}
+\bibcite{farquhar2024semanticentropy}{4}
+\bibcite{friel2023chainpoll}{5}
+\bibcite{kossen2024semanticprobes}{6}
+\bibcite{li2023halueval}{7}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Selected uncertainty feature means by dataset and label.}}{11}{figure.6}\protected@file@percent }
+\newlabel{fig:feature-shift}{{6}{11}{Selected uncertainty feature means by dataset and label}{figure.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Discussion and Limitations}{11}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{11}{section.10}\protected@file@percent }
+\bibcite{lin2022truthfulqa}{8}
+\gdef \@abspage@last{12}

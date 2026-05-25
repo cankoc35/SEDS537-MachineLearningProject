@@ -1,0 +1,52 @@
+\begin{thebibliography}{1}
+
+\bibitem{calibration2025halueval}
+{Artificial Intelligence and Machine Learning Review}.
+\newblock Hallucination detection and confidence calibration for large language
+  model outputs: Reproducible experiments on halueval.
+\newblock {\em Artificial Intelligence and Machine Learning Review}, 2025.
+
+\bibitem{chen2025belief}
+Zhaorun Chen et~al.
+\newblock A probabilistic framework for llm hallucination detection via belief
+  tree propagation.
+\newblock In {\em Proceedings of the 2025 Conference of the North American
+  Chapter of the Association for Computational Linguistics}, 2025.
+
+\bibitem{duan2023strongerfocus}
+Jinhao Duan et~al.
+\newblock Enhancing uncertainty-based hallucination detection with stronger
+  focus.
+\newblock In {\em Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing}, 2023.
+
+\bibitem{farquhar2024semanticentropy}
+Sebastian Farquhar, Jannik Kossen, Lorenz Kuhn, and Yarin Gal.
+\newblock Detecting hallucinations in large language models using semantic
+  entropy.
+\newblock {\em Nature}, 2024.
+
+\bibitem{friel2023chainpoll}
+Robert Friel et~al.
+\newblock Chainpoll: A high efficacy method for llm hallucination detection,
+  2023.
+
+\bibitem{kossen2024semanticprobes}
+Jannik Kossen et~al.
+\newblock Semantic entropy probes: Robust and cheap hallucination detection in
+  llms, 2024.
+
+\bibitem{li2023halueval}
+Junyi Li et~al.
+\newblock Halueval: A large-scale hallucination evaluation benchmark for large
+  language models.
+\newblock In {\em Proceedings of the 2023 Conference on Empirical Methods in
+  Natural Language Processing}, 2023.
+
+\bibitem{lin2022truthfulqa}
+Stephanie Lin, Jacob Hilton, and Owain Evans.
+\newblock Truthfulqa: Measuring how models mimic human falsehoods.
+\newblock In {\em Proceedings of the 60th Annual Meeting of the Association for
+  Computational Linguistics}, 2022.
+
+\end{thebibliography}
