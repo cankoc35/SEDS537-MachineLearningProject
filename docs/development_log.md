@@ -523,3 +523,87 @@ Conclusion:
   - final report write-up
   - final presentation preparation
   - limitations and future-work discussion
+
+## May 25, 2026
+
+Today we added and evaluated a no-context version of HaluEval to directly measure how much the context passage helps the uncertainty-based detector.
+
+### HaluEval No-Context Dataset
+
+- Added:
+  - `src/data/create_no_context_dataset.py`
+- Created:
+  - `data/processed/halueval_no_context.jsonl`
+- This file keeps the same prompts, answers, labels, and IDs as HaluEval, but clears the `context` field.
+- The purpose is to compare:
+  - HaluEval with context
+  - HaluEval without context
+  - TruthfulQA without context
+
+### HaluEval No-Context Feature Tables
+
+- Confirmed no-context feature extraction was completed for both feature extractors:
+  - `data/processed/halueval_no_context_uncertainty_entropy_features.csv`
+  - `data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv`
+
+### HaluEval No-Context Evaluation
+
+- Added:
+  - `scripts/evaluate_halueval_no_context.sh`
+  - `scripts/run_cross_validation_no_context.sh`
+- Ran grouped 80/20 evaluation, HaluEval-to-TruthfulQA transfer, and grouped 5-fold cross-validation.
+
+Main results:
+
+```text
+HaluEval no-context 3B 80/20:   Random Forest, F1 0.9276, ROC-AUC 0.9699
+HaluEval no-context 0.5B 80/20: Random Forest, F1 0.9283, ROC-AUC 0.9681
+HaluEval no-context 3B CV:      Random Forest, F1 0.9277, ROC-AUC 0.9711
+HaluEval no-context 0.5B CV:    Random Forest, F1 0.9271, ROC-AUC 0.9701
+```
+
+Transfer results:
+
+```text
+HaluEval no-context 3B -> TruthfulQA:   Random Forest, F1 0.5927, ROC-AUC 0.4710
+HaluEval no-context 0.5B -> TruthfulQA: Random Forest, F1 0.6024, ROC-AUC 0.4890
+```
+
+### Context Effect Finding
+
+- With context, HaluEval achieved about 0.987--0.989 F1.
+- Without context, HaluEval dropped to about 0.928 F1.
+- This confirms that context helps, but the drop is not as large as expected.
+
+Interpretation:
+
+- HaluEval remains relatively easy even without context.
+- Possible reasons:
+  - HaluEval supported and hallucinated answers are paired and often stylistically different.
+  - Many questions contain useful clues even without the context passage.
+  - Some hallucinated answers are longer, vague, generic, or less likely under the language model.
+  - The classifier may learn HaluEval-specific uncertainty and answer-style patterns, not only factual grounding.
+
+### TruthfulQA Difficulty Explanation
+
+- TruthfulQA still performs much worse because:
+  - it has no supporting context
+  - it is designed around misconceptions and tricky questions
+  - false answers may be common myths and therefore look likely to the language model
+  - correct answers may reject common myths and therefore look less familiar
+  - TruthfulQA has a different structure from HaluEval, with multiple correct and incorrect answers per question
+
+Classroom explanation:
+
+```text
+TruthfulQA is harder because it tests open-domain truthfulness without supporting context, and many false answers are common misconceptions that can still look likely to the language model. At the same time, correct answers often sound less common because they reject those misconceptions. Therefore, token confidence and entropy are less separable than in HaluEval.
+```
+
+### Updated Conclusion
+
+- The project should clearly distinguish:
+  - context-grounded hallucination detection
+  - no-context truthfulness detection
+- The method works best in context-grounded HaluEval.
+- HaluEval no-context shows that context matters, but dataset-specific patterns also make HaluEval easier than TruthfulQA.
+- TruthfulQA remains the stronger test of open-domain truthfulness generalization.

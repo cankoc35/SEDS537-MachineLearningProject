@@ -60,6 +60,7 @@ Processed files:
 
 ```text
 data/processed/halueval.jsonl
+data/processed/halueval_no_context.jsonl
 data/processed/truthfulqa.jsonl
 ```
 
@@ -70,6 +71,8 @@ data/processed/halueval_uncertainty_entropy_features.csv
 data/processed/truthfulqa_uncertainty_entropy_features.csv
 data/processed/halueval_uncertainty_entropy_qwen05b_features.csv
 data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
+data/processed/halueval_no_context_uncertainty_entropy_features.csv
+data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
 ```
 
 ## Repository Structure
@@ -92,6 +95,7 @@ data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
 │   └── tables/
 ├── scripts/
 │   ├── prepare_data.sh
+│   ├── evaluate_halueval_no_context.sh
 │   ├── evaluate.sh
 │   ├── evaluate_truthfulqa.sh
 │   ├── evaluate_external_truthfulqa.sh
@@ -99,6 +103,7 @@ data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
 │   ├── run_ablation.sh
 │   ├── run_ablation_qwen05b.sh
 │   ├── run_cross_validation.sh
+│   ├── run_cross_validation_no_context.sh
 │   ├── create_figures.sh
 │   └── analyze_truthfulqa_errors.sh
 ├── src/
@@ -136,6 +141,14 @@ This creates:
 ```text
 data/processed/halueval.jsonl
 data/processed/truthfulqa.jsonl
+```
+
+Create the no-context HaluEval variant:
+
+```bash
+.venv/bin/python -m src.data.create_no_context_dataset \
+  --input data/processed/halueval.jsonl \
+  --output data/processed/halueval_no_context.jsonl
 ```
 
 ## Local Qwen Model
@@ -200,6 +213,26 @@ and write to:
 ```text
 data/processed/halueval_uncertainty_entropy_qwen05b_features.csv
 data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
+```
+
+For the no-context HaluEval variant:
+
+```bash
+.venv/bin/python -m src.generation.extract_logprobs \
+  --input data/processed/halueval_no_context.jsonl \
+  --limit 0 \
+  --model models/qwen2.5-3b \
+  --output data/processed/halueval_no_context_uncertainty_entropy_features.csv
+```
+
+For Qwen2.5-0.5B:
+
+```bash
+.venv/bin/python -m src.generation.extract_logprobs \
+  --input data/processed/halueval_no_context.jsonl \
+  --limit 0 \
+  --model models/qwen2.5-0.5b \
+  --output data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
 ```
 
 ## Evaluation Commands
@@ -293,6 +326,40 @@ HaluEval -> TruthfulQA:     Random Forest, F1 0.6388, ROC-AUC 0.4000
 
 The smaller feature extractor remains useful, but it is weaker than 3B on HaluEval.
 
+### HaluEval No-Context Evaluation
+
+```bash
+./scripts/evaluate_halueval_no_context.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_no_context_qwen3b_classifier_metrics.csv
+outputs/tables/halueval_no_context_qwen05b_classifier_metrics.csv
+outputs/tables/halueval_no_context_to_truthfulqa_qwen3b_classifier_metrics.csv
+outputs/tables/halueval_no_context_to_truthfulqa_qwen05b_classifier_metrics.csv
+```
+
+Main no-context results:
+
+```text
+HaluEval no-context 3B 80/20:        Random Forest, F1 0.9276, ROC-AUC 0.9699
+HaluEval no-context 0.5B 80/20:      Random Forest, F1 0.9283, ROC-AUC 0.9681
+HaluEval no-context 3B -> TruthfulQA:   Random Forest, F1 0.5927, ROC-AUC 0.4710
+HaluEval no-context 0.5B -> TruthfulQA: Random Forest, F1 0.6024, ROC-AUC 0.4890
+```
+
+Context effect:
+
+```text
+HaluEval with context:    about 0.987--0.989 F1
+HaluEval without context: about 0.927--0.928 F1
+TruthfulQA no context:    about 0.697--0.701 F1
+```
+
+Removing context lowers HaluEval performance, which confirms that context helps. However, HaluEval no-context still performs much better than TruthfulQA, suggesting that HaluEval contains dataset-specific signals beyond evidence grounding.
+
 ## Cross-Validation
 
 Run grouped 5-fold cross-validation:
@@ -310,6 +377,19 @@ outputs/tables/halueval_qwen05b_cv_summary.csv
 outputs/tables/truthfulqa_qwen05b_cv_summary.csv
 ```
 
+For HaluEval no-context CV:
+
+```bash
+./scripts/run_cross_validation_no_context.sh
+```
+
+Outputs:
+
+```text
+outputs/tables/halueval_no_context_qwen3b_cv_summary.csv
+outputs/tables/halueval_no_context_qwen05b_cv_summary.csv
+```
+
 Grouped cross-validation keeps all answers from the same original question in the same fold. This prevents train-test leakage.
 
 Main CV findings:
@@ -319,6 +399,8 @@ Qwen2.5-3B   HaluEval:   best ROC-AUC 0.9986, F1 about 0.9871
 Qwen2.5-0.5B HaluEval:   best ROC-AUC 0.9945, F1 about 0.9746
 Qwen2.5-3B   TruthfulQA: best ROC-AUC 0.6836, F1 about 0.6968
 Qwen2.5-0.5B TruthfulQA: best ROC-AUC 0.6841, F1 about 0.7006
+Qwen2.5-3B   HaluEval no-context:   best ROC-AUC 0.9711, F1 about 0.9277
+Qwen2.5-0.5B HaluEval no-context:   best ROC-AUC 0.9701, F1 about 0.9271
 ```
 
 The CV results confirm the original 80/20 pattern: HaluEval is much easier than TruthfulQA.
@@ -411,29 +493,35 @@ Outputs:
 
 ```text
 outputs/figures/cv_model_size_comparison.png
+outputs/figures/context_effect_comparison.png
 outputs/figures/ablation_feature_group_comparison.png
 outputs/figures/confusion_matrices.png
 outputs/figures/roc_curves.png
 outputs/figures/feature_distribution_shift.png
 ```
 
-These figures summarize model-size comparison, feature ablation, classification errors, ROC curves, and feature distribution shift.
+These figures summarize model-size comparison, context effect, feature ablation, classification errors, ROC curves, and feature distribution shift.
 
 ## Current Status
 
 Completed:
 
 - HaluEval and TruthfulQA preprocessing
+- HaluEval no-context dataset
 - Qwen-based token probability/logprob extraction
 - entropy feature extraction
 - HaluEval feature table
 - TruthfulQA feature table
 - Qwen2.5-0.5B feature tables
+- HaluEval no-context feature tables
 - HaluEval grouped 80/20 evaluation
+- HaluEval no-context grouped 80/20 evaluation
 - TruthfulQA grouped 80/20 evaluation
 - HaluEval-to-TruthfulQA external evaluation
+- HaluEval no-context-to-TruthfulQA external evaluation
 - Qwen2.5-0.5B grouped and external evaluation
 - grouped 5-fold cross-validation
+- HaluEval no-context grouped 5-fold cross-validation
 - feature distribution analysis
 - TruthfulQA error analysis
 - ablation study
@@ -453,6 +541,7 @@ Recommended next steps:
 
 1. Write final discussion:
    - strong HaluEval performance
+   - effect of removing HaluEval context
    - weaker TruthfulQA performance
    - context-grounded vs no-context detection
    - dataset shift

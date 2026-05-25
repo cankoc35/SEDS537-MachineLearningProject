@@ -27,6 +27,26 @@ CV_SUMMARIES = {
         "outputs/tables/truthfulqa_qwen05b_cv_summary.csv"
     ),
 }
+CONTEXT_EFFECT_SUMMARIES = {
+    ("Qwen2.5-3B", "HaluEval\nwith context"): Path(
+        "outputs/tables/halueval_qwen3b_cv_summary.csv"
+    ),
+    ("Qwen2.5-3B", "HaluEval\nno context"): Path(
+        "outputs/tables/halueval_no_context_qwen3b_cv_summary.csv"
+    ),
+    ("Qwen2.5-3B", "TruthfulQA\nno context"): Path(
+        "outputs/tables/truthfulqa_qwen3b_cv_summary.csv"
+    ),
+    ("Qwen2.5-0.5B", "HaluEval\nwith context"): Path(
+        "outputs/tables/halueval_qwen05b_cv_summary.csv"
+    ),
+    ("Qwen2.5-0.5B", "HaluEval\nno context"): Path(
+        "outputs/tables/halueval_no_context_qwen05b_cv_summary.csv"
+    ),
+    ("Qwen2.5-0.5B", "TruthfulQA\nno context"): Path(
+        "outputs/tables/truthfulqa_qwen05b_cv_summary.csv"
+    ),
+}
 ABLATION_FILES = {
     ("Qwen2.5-3B", "HaluEval"): Path("outputs/tables/halueval_ablation_results.csv"),
     ("Qwen2.5-3B", "TruthfulQA"): Path(
@@ -145,6 +165,61 @@ def plot_cv_comparison(output_dir: Path) -> None:
     plt.title("Best Grouped 5-Fold CV Results")
     plt.legend()
     save_current_figure(output_dir / "cv_model_size_comparison.png")
+
+
+def load_context_effect_rows() -> pd.DataFrame:
+    """Load best ROC-AUC rows for context-effect comparison."""
+
+    rows = []
+    for (extractor, setting), path in CONTEXT_EFFECT_SUMMARIES.items():
+        data = pd.read_csv(path)
+        best = data.sort_values("roc_auc_mean", ascending=False).iloc[0]
+        rows.append(
+            {
+                "feature_extractor": extractor,
+                "setting": setting,
+                "model": best["model"],
+                "f1": best["f1_mean"],
+                "roc_auc": best["roc_auc_mean"],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def plot_context_effect_comparison(output_dir: Path) -> None:
+    """Plot HaluEval with context, HaluEval no-context, and TruthfulQA."""
+
+    data = load_context_effect_rows()
+    setting_order = [
+        "HaluEval\nwith context",
+        "HaluEval\nno context",
+        "TruthfulQA\nno context",
+    ]
+    colors = {
+        "Qwen2.5-3B": "#4C78A8",
+        "Qwen2.5-0.5B": "#F58518",
+    }
+    x_positions = range(len(setting_order))
+    width = 0.36
+
+    plt.figure(figsize=(9, 5))
+    for offset, extractor in [(-width / 2, "Qwen2.5-3B"), (width / 2, "Qwen2.5-0.5B")]:
+        subset = data[data["feature_extractor"] == extractor].set_index("setting")
+        scores = [subset.loc[setting, "f1"] for setting in setting_order]
+        plt.bar(
+            [x + offset for x in x_positions],
+            scores,
+            width=width,
+            label=extractor,
+            color=colors[extractor],
+        )
+
+    plt.xticks(list(x_positions), setting_order)
+    plt.ylim(0.55, 1.02)
+    plt.ylabel("Best grouped CV F1")
+    plt.title("Effect of Context on Hallucination Detection")
+    plt.legend()
+    save_current_figure(output_dir / "context_effect_comparison.png")
 
 
 def load_ablation_rows() -> pd.DataFrame:
@@ -285,6 +360,7 @@ def plot_feature_distribution_shift(output_dir: Path) -> None:
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     plot_cv_comparison(args.output_dir)
+    plot_context_effect_comparison(args.output_dir)
     plot_ablation_comparison(args.output_dir)
     plot_confusion_matrices(args.output_dir)
     plot_roc_curves(args.output_dir)
