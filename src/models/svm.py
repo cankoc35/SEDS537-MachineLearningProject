@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 
 
 def build_linear_svm(random_state: int = 42) -> Pipeline:
@@ -14,6 +14,26 @@ def build_linear_svm(random_state: int = 42) -> Pipeline:
         steps=[
             ("scaler", StandardScaler()),
             ("classifier", LinearSVC(max_iter=10000, random_state=random_state)),
+        ]
+    )
+
+
+def build_rbf_svm(random_state: int = 42) -> Pipeline:
+    """Build a scaled nonlinear RBF-kernel SVM hallucination classifier."""
+
+    return Pipeline(
+        steps=[
+            ("scaler", StandardScaler()),
+            (
+                "classifier",
+                SVC(
+                    kernel="rbf",
+                    C=1.0,
+                    gamma="scale",
+                    cache_size=1000,
+                    random_state=random_state,
+                ),
+            ),
         ]
     )
 

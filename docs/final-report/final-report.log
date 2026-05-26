@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  25 MAY 2026 22:58
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  26 MAY 2026 20:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -402,107 +402,167 @@ Package hyperref Info: Link coloring OFF on input line 14.
 [3]
 
 [4]
-<../../outputs/figures/cv_model_size_comparison.png, id=110, 643.203pt x 353.03
-896pt>
-File: ../../outputs/figures/cv_model_size_comparison.png Graphic file (type png
-)
-<use ../../outputs/figures/cv_model_size_comparison.png>
-Package pdftex.def Info: ../../outputs/figures/cv_model_size_comparison.png  us
-ed on input line 126.
-(pdftex.def)             Requested size: 399.29463pt x 219.16739pt.
-
 
 [5
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.130 
+l.136 \newpage
+              
+pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.136 \newpage
+              ]
+
+[6]
+
+[7]
+
+[8]
+
+[9
+pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.233 
       ]
-<../../outputs/figures/context_effect_comparison.png, id=117, 643.203pt x 353.0
-3896pt>
-File: ../../outputs/figures/context_effect_comparison.png Graphic file (type pn
-g)
-<use ../../outputs/figures/context_effect_comparison.png>
-Package pdftex.def Info: ../../outputs/figures/context_effect_comparison.png  u
-sed on input line 137.
-(pdftex.def)             Requested size: 399.29463pt x 219.16739pt.
+<../../outputs/figures/halueval_qa_pca_decision_boundary.png, id=145, 498.663pt
+ x 389.17395pt>
+File: ../../outputs/figures/halueval_qa_pca_decision_boundary.png Graphic file 
+(type png)
+<use ../../outputs/figures/halueval_qa_pca_decision_boundary.png>
+Package pdftex.def Info: ../../outputs/figures/halueval_qa_pca_decision_boundar
+y.png  used on input line 261.
+(pdftex.def)             Requested size: 225.4804pt x 175.9699pt.
+<../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png, id=
+147, 498.663pt x 389.17395pt>
+File: ../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png
+ Graphic file (type png)
+<use ../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png>
+
+Package pdftex.def Info: ../../outputs/figures/halueval_qa_pca_decision_boundar
+y_random_forest.png  used on input line 266.
+(pdftex.def)             Requested size: 225.4804pt x 175.9699pt.
 
 
-[6
+[10
+pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.271 
+      ]
+<../../outputs/figures/truthfulqa_pca_decision_boundary.png, id=156, 498.30165p
+t x 389.17395pt>
+File: ../../outputs/figures/truthfulqa_pca_decision_boundary.png Graphic file (
+type png)
+<use ../../outputs/figures/truthfulqa_pca_decision_boundary.png>
+Package pdftex.def Info: ../../outputs/figures/truthfulqa_pca_decision_boundary
+.png  used on input line 278.
+(pdftex.def)             Requested size: 225.4804pt x 176.10052pt.
+<../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png, id=157, 49
+8.30165pt x 389.17395pt>
+File: ../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png Graphi
+c file (type png)
+<use ../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png>
+Package pdftex.def Info: ../../outputs/figures/truthfulqa_pca_decision_boundary
+_rbf_svm.png  used on input line 283.
+(pdftex.def)             Requested size: 225.4804pt x 176.10052pt.
+
+
+[11
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.141 
-       <../../outputs/figures/cv_model_size_comparison.png>]
-<../../outputs/figures/roc_curves.png, id=124, 570.933pt x 425.30894pt>
-File: ../../outputs/figures/roc_curves.png Graphic file (type png)
-<use ../../outputs/figures/roc_curves.png>
-Package pdftex.def Info: ../../outputs/figures/roc_curves.png  used on input li
-ne 146.
-(pdftex.def)             Requested size: 399.29463pt x 297.46114pt.
-
-
-[7
+l.293 
+      
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.150 
-       <../../outputs/figures/context_effect_comparison.png>]
-<../../outputs/figures/ablation_feature_group_comparison.png, id=132, 711.8595p
+l.293 
+       <../../outputs/figures/halueval_qa_pca_decision_boundary.png> <../../out
+puts/figures/halueval_qa_pca_decision_boundary_random_forest.png> <../../output
+s/figures/truthfulqa_pca_decision_boundary.png> <../../outputs/figures/truthful
+qa_pca_decision_boundary_rbf_svm.png>]
+<../../outputs/figures/roc_curves.png, id=167, 570.933pt x 425.30894pt>
+File: ../../outputs/figures/roc_curves.png Graphic file (type png)
+<use ../../outputs/figures/roc_curves.png>
+Package pdftex.def Info: ../../outputs/figures/roc_curves.png  used on input li
+ne 338.
+(pdftex.def)             Requested size: 399.29463pt x 297.46114pt.
+
+
+[12
+pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.342 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{table.6}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.342 
+      ]
+<../../outputs/figures/ablation_feature_group_comparison.png, id=174, 711.8595p
 t x 499.3857pt>
 File: ../../outputs/figures/ablation_feature_group_comparison.png Graphic file 
 (type png)
 <use ../../outputs/figures/ablation_feature_group_comparison.png>
 Package pdftex.def Info: ../../outputs/figures/ablation_feature_group_compariso
-n.png  used on input line 156.
+n.png  used on input line 348.
 (pdftex.def)             Requested size: 399.29463pt x 280.1189pt.
 
 
-[8
+[13
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.160 
+l.352 
        <../../outputs/figures/roc_curves.png>]
-<../../outputs/figures/confusion_matrices.png, id=139, 559.3698pt x 499.02435pt
+<../../outputs/figures/confusion_matrices.png, id=182, 559.3698pt x 499.02435pt
 >
 File: ../../outputs/figures/confusion_matrices.png Graphic file (type png)
 <use ../../outputs/figures/confusion_matrices.png>
 Package pdftex.def Info: ../../outputs/figures/confusion_matrices.png  used on 
-input line 166.
+input line 358.
 (pdftex.def)             Requested size: 399.29463pt x 356.22862pt.
 
 
-[9
+[14
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.170 
+l.362 
        <../../outputs/figures/ablation_feature_group_comparison.png>]
-<../../outputs/figures/feature_distribution_shift.png, id=146, 715.83435pt x 49
+<../../outputs/figures/feature_distribution_shift.png, id=189, 715.83435pt x 49
 9.02435pt>
 File: ../../outputs/figures/feature_distribution_shift.png Graphic file (type p
 ng)
 <use ../../outputs/figures/feature_distribution_shift.png>
 Package pdftex.def Info: ../../outputs/figures/feature_distribution_shift.png  
-used on input line 173.
+used on input line 365.
 (pdftex.def)             Requested size: 399.29463pt x 278.36285pt.
 
 
-[10
+[15
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.177 
+l.369 
        <../../outputs/figures/confusion_matrices.png>] (./final-report.bbl
 
-[11
+[16
 pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
@@ -510,7 +570,7 @@ s been already used, duplicate ignored
 l.45 
       <../../outputs/figures/feature_distribution_shift.png>])
 
-[12] (./final-report.aux)
+[17] (./final-report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
@@ -519,24 +579,29 @@ Package rerunfilecheck Info: File `final-report.out' has not changed.
 (rerunfilecheck)             Checksum: 97284DFE2927C310E5BAA51325475500;2577.
  ) 
 Here is how much of TeX's memory you used:
- 9893 strings out of 474662
- 154642 string characters out of 5751108
- 564456 words of memory out of 5000000
- 32784 multiletter control sequences out of 15000+600000
- 565252 words of font info for 58 fonts, out of 8000000 for 9000
+ 9937 strings out of 474662
+ 156279 string characters out of 5751108
+ 564944 words of memory out of 5000000
+ 32814 multiletter control sequences out of 15000+600000
+ 566843 words of font info for 64 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 75i,8n,79p,962b,559s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,962b,559s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx1
 0.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/c
 mbx12.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/
-cm/cmr10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfon
-ts/cm/cmr12.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/ams
-fonts/cm/cmr17.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmti10.pfb>
-Output written on final-report.pdf (12 pages, 672652 bytes).
+cm/cmex10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmmi10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/a
+msfonts/cm/cmmi8.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmr10.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/pu
+blic/amsfonts/cm/cmr12.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/ty
+pe1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/
+type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2025basic/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmti10.pfb>
+Output written on final-report.pdf (17 pages, 1855669 bytes).
 PDF statistics:
- 206 PDF objects out of 1000 (max. 8388607)
- 166 compressed objects within 2 object streams
- 46 named destinations out of 1000 (max. 500000)
- 167 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 271 PDF objects out of 1000 (max. 8388607)
+ 211 compressed objects within 3 object streams
+ 56 named destinations out of 1000 (max. 500000)
+ 177 words of extra memory for PDF output out of 10000 (max. 10000000)
 

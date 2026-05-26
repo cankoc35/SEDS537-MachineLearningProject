@@ -14,7 +14,7 @@ from sklearn.model_selection import GroupShuffleSplit
 from src.evaluation.metrics import compute_metrics
 from src.models.logistic_regression import build_logistic_regression
 from src.models.random_forest import build_random_forest
-from src.models.svm import build_linear_svm
+from src.models.svm import build_linear_svm, build_rbf_svm
 
 
 DEFAULT_INPUT = Path("data/processed/halueval_uncertainty_entropy_features.csv")
@@ -134,6 +134,7 @@ def build_models(random_state: int) -> dict[str, Any]:
     return {
         "Logistic Regression": build_logistic_regression(random_state=random_state),
         "Linear SVM": build_linear_svm(random_state=random_state),
+        "RBF SVM": build_rbf_svm(random_state=random_state),
         "Random Forest": build_random_forest(random_state=random_state),
     }
 

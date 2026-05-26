@@ -10,9 +10,16 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import auc, confusion_matrix, roc_curve
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 
+from src.evaluation.evaluate_uncertainty_classifiers import FEATURE_COLUMNS
 
 DEFAULT_OUTPUT_DIR = Path("outputs/figures")
 CV_SUMMARIES = {
@@ -86,6 +93,10 @@ PREDICTION_FILES = {
     ),
 }
 FEATURE_DISTRIBUTION_FILE = Path("outputs/tables/feature_distribution_by_dataset.csv")
+FEATURE_FILES = {
+    "HaluEval QA": Path("data/processed/halueval_uncertainty_entropy_features.csv"),
+    "TruthfulQA": Path("data/processed/truthfulqa_uncertainty_entropy_features.csv"),
+}
 SELECTED_FEATURES = [
     "mean_token_probability",
     "negative_mean_logprob",
@@ -278,6 +289,16 @@ def get_best_model_name(metric_path: Path) -> str:
     return str(data.sort_values("roc_auc", ascending=False).iloc[0]["model"])
 
 
+def get_model_f1(metric_path: Path, model_name: str) -> float:
+    """Return the grouped 80/20 F1 score for a specific model."""
+
+    data = pd.read_csv(metric_path)
+    model_row = data[data["model"] == model_name]
+    if model_row.empty:
+        raise ValueError(f"Model '{model_name}' not found in {metric_path}")
+    return float(model_row.iloc[0]["f1"])
+
+
 def plot_confusion_matrices(output_dir: Path) -> None:
     """Plot confusion matrices for the best 80/20 model in each setting."""
 
@@ -357,6 +378,114 @@ def plot_feature_distribution_shift(output_dir: Path) -> None:
     save_current_figure(output_dir / "feature_distribution_shift.png")
 
 
+def plot_pca_decision_boundary(
+    feature_path: Path,
+    title: str,
+    output_path: Path,
+    classifier_name: str = "Logistic Regression",
+    max_scatter_points: int = 6000,
+) -> None:
+    """Plot a 2D PCA decision boundary for visualization only."""
+
+    data = pd.read_csv(feature_path)
+    features = data[FEATURE_COLUMNS]
+    labels = data["label"].astype(int)
+
+    scaled_features = StandardScaler().fit_transform(features)
+    pca = PCA(n_components=2, random_state=42)
+    coordinates = pca.fit_transform(scaled_features)
+
+    classifiers = {
+        "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
+        "RBF SVM": SVC(kernel="rbf", C=1.0, gamma="scale", random_state=42),
+        "Random Forest": RandomForestClassifier(
+            n_estimators=200,
+            random_state=42,
+            n_jobs=-1,
+        ),
+    }
+    classifier = classifiers[classifier_name]
+    classifier.fit(coordinates, labels)
+
+    x_min, x_max = coordinates[:, 0].min() - 0.5, coordinates[:, 0].max() + 0.5
+    y_min, y_max = coordinates[:, 1].min() - 0.5, coordinates[:, 1].max() + 0.5
+    xx, yy = np.meshgrid(
+        np.linspace(x_min, x_max, 250),
+        np.linspace(y_min, y_max, 250),
+    )
+    grid = pd.DataFrame({"pc1": xx.ravel(), "pc2": yy.ravel()}).to_numpy()
+    predictions = classifier.predict(grid).reshape(xx.shape)
+
+    plot_data = pd.DataFrame(
+        {
+            "pc1": coordinates[:, 0],
+            "pc2": coordinates[:, 1],
+            "label": labels,
+        }
+    )
+    if len(plot_data) > max_scatter_points:
+        plot_data = plot_data.sample(max_scatter_points, random_state=42)
+
+    plt.figure(figsize=(7, 5.5))
+    plt.contourf(
+        xx,
+        yy,
+        predictions,
+        alpha=0.18,
+        levels=[-0.5, 0.5, 1.5],
+        colors=["#4C78A8", "#E45756"],
+    )
+    for label, color, name in [(0, "#4C78A8", "label 0"), (1, "#E45756", "label 1")]:
+        subset = plot_data[plot_data["label"] == label]
+        plt.scatter(
+            subset["pc1"],
+            subset["pc2"],
+            s=12,
+            alpha=0.35,
+            color=color,
+            edgecolors="none",
+            label=name,
+        )
+
+    explained = pca.explained_variance_ratio_
+    plt.xlabel(f"PC1 ({explained[0] * 100:.1f}% variance)")
+    plt.ylabel(f"PC2 ({explained[1] * 100:.1f}% variance)")
+    plt.title(title)
+    plt.legend()
+    plt.grid(alpha=0.2)
+    save_current_figure(output_path)
+
+
+def plot_pca_decision_boundaries(output_dir: Path) -> None:
+    """Create PCA decision-boundary plots for HaluEval QA and TruthfulQA."""
+
+    for dataset_name, path in FEATURE_FILES.items():
+        metrics_key = ("Qwen2.5-3B", "HaluEval" if dataset_name == "HaluEval QA" else dataset_name)
+        metric_path = METRIC_FILES[metrics_key]
+        output_name = dataset_name.lower().replace(" ", "_").replace("qa", "qa")
+        logistic_f1 = get_model_f1(metric_path, "Logistic Regression")
+        rbf_f1 = get_model_f1(metric_path, "RBF SVM")
+        random_forest_f1 = get_model_f1(metric_path, "Random Forest")
+        plot_pca_decision_boundary(
+            feature_path=path,
+            title=f"{dataset_name}: Logistic Regression PCA Boundary (F1={logistic_f1:.3f})",
+            output_path=output_dir / f"{output_name}_pca_decision_boundary.png",
+        )
+        plot_pca_decision_boundary(
+            feature_path=path,
+            title=f"{dataset_name}: RBF SVM PCA Boundary (F1={rbf_f1:.3f})",
+            output_path=output_dir / f"{output_name}_pca_decision_boundary_rbf_svm.png",
+            classifier_name="RBF SVM",
+        )
+        plot_pca_decision_boundary(
+            feature_path=path,
+            title=f"{dataset_name}: Random Forest PCA Boundary (F1={random_forest_f1:.3f})",
+            output_path=output_dir
+            / f"{output_name}_pca_decision_boundary_random_forest.png",
+            classifier_name="Random Forest",
+        )
+
+
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     plot_cv_comparison(args.output_dir)
@@ -365,6 +494,7 @@ def main(argv: list[str] | None = None) -> None:
     plot_confusion_matrices(args.output_dir)
     plot_roc_curves(args.output_dir)
     plot_feature_distribution_shift(args.output_dir)
+    plot_pca_decision_boundaries(args.output_dir)
 
 
 if __name__ == "__main__":

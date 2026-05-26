@@ -20,6 +20,7 @@ These features are used to train:
 
 - Logistic Regression
 - Linear SVM
+- RBF SVM
 - Random Forest
 
 ## Current Finding
@@ -255,6 +256,7 @@ Current HaluEval results:
 ```text
 Logistic Regression: accuracy 0.9875, F1 0.9875, ROC-AUC 0.9986
 Linear SVM:          accuracy 0.9885, F1 0.9885, ROC-AUC 0.9986
+RBF SVM:             accuracy 0.9880, F1 0.9880, ROC-AUC 0.9986
 Random Forest:       accuracy 0.9883, F1 0.9883, ROC-AUC 0.9988
 ```
 
@@ -276,6 +278,7 @@ Current TruthfulQA-only results:
 ```text
 Logistic Regression: accuracy 0.6254, F1 0.6928, ROC-AUC 0.6539
 Linear SVM:          accuracy 0.6254, F1 0.6941, ROC-AUC 0.6537
+RBF SVM:             accuracy 0.6272, F1 0.7037, ROC-AUC 0.6830
 Random Forest:       accuracy 0.6352, F1 0.6850, ROC-AUC 0.6894
 ```
 
@@ -297,6 +300,7 @@ Current external evaluation results:
 ```text
 Logistic Regression: accuracy 0.4838, F1 0.6252, ROC-AUC 0.3752
 Linear SVM:          accuracy 0.4836, F1 0.6248, ROC-AUC 0.3719
+RBF SVM:             accuracy 0.4730, F1 0.6120, ROC-AUC 0.3915
 Random Forest:       accuracy 0.4902, F1 0.6311, ROC-AUC 0.3985
 ```
 
@@ -319,8 +323,8 @@ outputs/tables/halueval_to_truthfulqa_qwen05b_classifier_metrics.csv
 Main 0.5B results:
 
 ```text
-HaluEval 80/20 best:        Random Forest, F1 0.9745, ROC-AUC 0.9938
-TruthfulQA 80/20 best:      Random Forest, F1 0.6981, ROC-AUC 0.6898
+HaluEval 80/20 best:        RBF SVM, F1 0.9762, ROC-AUC 0.9945
+TruthfulQA 80/20 best:      RBF SVM, F1 0.7150, ROC-AUC 0.6802
 HaluEval -> TruthfulQA:     Random Forest, F1 0.6388, ROC-AUC 0.4000
 ```
 
@@ -353,9 +357,9 @@ HaluEval no-context 0.5B -> TruthfulQA: Random Forest, F1 0.6024, ROC-AUC 0.4890
 Context effect:
 
 ```text
-HaluEval with context:    about 0.987--0.989 F1
+HaluEval with context:    about 0.988 F1
 HaluEval without context: about 0.927--0.928 F1
-TruthfulQA no context:    about 0.697--0.701 F1
+TruthfulQA no context:    about 0.717--0.718 F1 with RBF SVM
 ```
 
 Removing context lowers HaluEval performance, which confirms that context helps. However, HaluEval no-context still performs much better than TruthfulQA, suggesting that HaluEval contains dataset-specific signals beyond evidence grounding.
@@ -395,10 +399,10 @@ Grouped cross-validation keeps all answers from the same original question in th
 Main CV findings:
 
 ```text
-Qwen2.5-3B   HaluEval:   best ROC-AUC 0.9986, F1 about 0.9871
-Qwen2.5-0.5B HaluEval:   best ROC-AUC 0.9945, F1 about 0.9746
-Qwen2.5-3B   TruthfulQA: best ROC-AUC 0.6836, F1 about 0.6968
-Qwen2.5-0.5B TruthfulQA: best ROC-AUC 0.6841, F1 about 0.7006
+Qwen2.5-3B   HaluEval:   best F1 0.9883 with RBF SVM
+Qwen2.5-0.5B HaluEval:   best F1 0.9759 with RBF SVM
+Qwen2.5-3B   TruthfulQA: best F1 0.7173 with RBF SVM
+Qwen2.5-0.5B TruthfulQA: best F1 0.7181 with RBF SVM
 Qwen2.5-3B   HaluEval no-context:   best ROC-AUC 0.9711, F1 about 0.9277
 Qwen2.5-0.5B HaluEval no-context:   best ROC-AUC 0.9701, F1 about 0.9271
 ```

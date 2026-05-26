@@ -630,3 +630,33 @@ Presentation wording:
 ```text
 TruthfulQA is difficult because it was designed to trigger imitative falsehoods. A false answer can be a common myth that the model has seen many times, so it may receive high confidence. A correct answer may reject the myth and sound less familiar. This explains why uncertainty-only features perform much worse on TruthfulQA than on HaluEval.
 ```
+
+## 2026-05-26
+
+### Added RBF SVM Classifier
+
+- Added an RBF-kernel SVM as a nonlinear classifier.
+- Motivation: the PCA decision-boundary visualization showed stronger class overlap for TruthfulQA, so a nonlinear boundary was worth testing.
+- Updated grouped 80/20, grouped 5-fold CV, transfer, and no-context evaluation outputs.
+
+Main finding:
+
+```text
+TruthfulQA 3B 80/20:
+Linear SVM F1: 0.6941
+RBF SVM F1:    0.7037
+
+TruthfulQA 3B grouped 5-fold CV:
+Linear SVM mean F1: 0.7066
+RBF SVM mean F1:    0.7173
+
+TruthfulQA 0.5B grouped 5-fold CV:
+Linear SVM mean F1: 0.7012
+RBF SVM mean F1:    0.7181
+```
+
+Interpretation:
+
+- RBF SVM gives a modest but consistent F1 improvement on TruthfulQA.
+- This supports the idea that TruthfulQA is less linearly separable in the uncertainty feature space.
+- The improvement is not enough to close the large gap between TruthfulQA and HaluEval, so the main limitation remains dataset difficulty and no-context truthfulness detection.

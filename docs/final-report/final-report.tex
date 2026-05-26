@@ -16,7 +16,7 @@
 \maketitle
 
 \begin{abstract}
-Large language models can generate fluent answers that are factually incorrect or unsupported by evidence. This project studies hallucination detection as a binary classification problem, where a candidate answer is classified as supported/truthful or hallucinated/unsupported. Instead of asking a language model to directly judge hallucination, the proposed approach uses open-source language models as uncertainty feature extractors. Qwen2.5-3B and Qwen2.5-0.5B are used to score answer tokens, and features such as token probability, log-probability, low-confidence ratio, and entropy are computed. These features are then used to train Logistic Regression, Linear SVM, and Random Forest classifiers.
+Large language models can generate fluent answers that are factually incorrect or unsupported by evidence. This project studies hallucination detection as a binary classification problem, where a candidate answer is classified as supported/truthful or hallucinated/unsupported. Instead of asking a language model to directly judge hallucination, the proposed approach uses open-source language models as uncertainty feature extractors. Qwen2.5-3B and Qwen2.5-0.5B are used to score answer tokens, and features such as token probability, log-probability, low-confidence ratio, and entropy are computed. These features are then used to train Logistic Regression, Linear SVM, RBF SVM, and Random Forest classifiers.
 
 Experiments are conducted on HaluEval QA and TruthfulQA. HaluEval is evaluated both with its supporting context and after removing the context, while TruthfulQA is used as a no-context truthfulness dataset. Results show that uncertainty features are highly effective on context-grounded HaluEval, but performance decreases when context is removed and drops further on TruthfulQA. Grouped cross-validation, model-size comparison, and ablation experiments show that combining probability, log-probability, and entropy features gives the strongest same-dataset performance. The findings suggest that uncertainty-based hallucination detection is promising for context-grounded settings, but no-context truthfulness detection remains more challenging due to dataset shift, common misconceptions, and the lack of external evidence.
 \end{abstract}
@@ -30,7 +30,7 @@ Detecting hallucinations is important because LLM outputs are increasingly used 
 
 One possible approach is to ask an LLM directly whether an answer is hallucinated. However, this creates a black-box judgment that can be sensitive to prompting, model knowledge, and instruction-following behavior. In contrast, uncertainty-based detection treats the LLM as a feature extractor rather than as the final judge. The model's token probabilities and entropy values provide numerical signals that can be compared, analyzed, and evaluated with standard machine learning methods. This makes it possible to study which signals are useful, whether results are stable across train-test splits, and how performance changes across datasets.
 
-This project formulates hallucination detection as a binary classification problem. Given a question, a candidate answer, and optionally a context passage, the goal is to predict whether the answer is supported or hallucinated. The answer is scored token by token using open-source Qwen models, and numerical features such as token probability, log-probability, low-confidence token ratio, and entropy are extracted. These features are then used to train classical machine learning classifiers, including Logistic Regression, Linear SVM, and Random Forest. The use of classical classifiers also makes the final decision process easier to evaluate through cross-validation, ablation studies, confusion matrices, and ROC analysis.
+This project formulates hallucination detection as a binary classification problem. Given a question, a candidate answer, and optionally a context passage, the goal is to predict whether the answer is supported or hallucinated. The answer is scored token by token using open-source Qwen models, and numerical features such as token probability, log-probability, low-confidence token ratio, and entropy are extracted. These features are then used to train classical machine learning classifiers, including Logistic Regression, Linear SVM, RBF SVM, and Random Forest. The use of classical classifiers also makes the final decision process easier to evaluate through cross-validation, ablation studies, confusion matrices, and ROC analysis.
 
 The experimental evaluation uses HaluEval QA and TruthfulQA. HaluEval provides question-answer examples with supporting context, making it suitable for context-grounded hallucination detection. TruthfulQA does not provide context and instead tests whether models can distinguish truthful answers from common misconceptions. This distinction is important because uncertainty features are influenced by the input used during scoring. If the feature extractor sees a context passage, its token probabilities may reflect agreement or disagreement with that evidence. Without context, the same feature extractor must rely more heavily on its internal knowledge and calibration.
 
@@ -53,7 +53,9 @@ Overall, prior work suggests that hallucination detection can be approached thro
 \newpage
 
 \section{Datasets and Preprocessing}
-This project uses two hallucination and truthfulness datasets: HaluEval QA and TruthfulQA. HaluEval contains several task types, but only the QA subset is used in this project. This subset is appropriate for the main experiments because each example contains a question, a candidate answer, a supporting context passage, and a binary hallucination label. The processed HaluEval QA dataset contains 20,000 examples, with both supported and hallucinated answers.
+This project uses two hallucination and truthfulness datasets: HaluEval QA and TruthfulQA. HaluEval is a benchmark designed to evaluate whether LLM outputs are supported or hallucinated. TruthfulQA is a benchmark designed to test whether models reproduce common false beliefs or give truthful answers. Together, these datasets allow the project to compare context-grounded hallucination detection with no-context truthfulness detection.
+
+HaluEval contains several task types, but only the QA subset is used in this project. This subset is appropriate for the main experiments because each example contains a question, a candidate answer, a supporting context passage, and a binary hallucination label. The processed HaluEval QA dataset contains 20,000 examples, with both supported and hallucinated answers.
 
 TruthfulQA is used as a second evaluation dataset. It is different from HaluEval because it focuses on questions that are likely to trigger common misconceptions. For example, an incorrect answer may sound familiar or plausible because it matches a popular false belief. TruthfulQA does not provide a supporting context passage, so it represents a no-context truthfulness setting. In the processed version used here, correct answers are treated as truthful examples and incorrect answers are treated as hallucinated or false examples. The processed TruthfulQA dataset contains 5,918 examples.
 
@@ -96,50 +98,240 @@ Because context is central to this project, a no-context version of HaluEval QA 
     \label{tab:processed-datasets}
 \end{table}
 
-After preprocessing, uncertainty features are extracted from each processed dataset using Qwen models. These feature files are stored as CSV files and are used as the direct input to the classification models. The raw text fields are not used directly as classifier features; instead, they are used during feature extraction to obtain numerical uncertainty signals.
+After preprocessing, uncertainty features are extracted from each processed dataset using Qwen models. These feature files are stored as CSV files and are used as the direct input to the classification models. The raw text fields are not used directly as classifier features; instead, they are used during feature extraction to obtain numerical uncertainty signals. Table \ref{tab:variables} summarizes the dependent and independent variables used in the classification task.
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabular}{lll}
+        \toprule
+        Variable & Role & Meaning \\
+        \midrule
+        label & Dependent & Target class: 0 supported, 1 hallucinated \\
+        answer\_length\_tokens & Independent & Number of answer tokens \\
+        mean\_token\_probability & Independent & Average token confidence \\
+        min\_token\_probability & Independent & Lowest token confidence \\
+        max\_token\_probability & Independent & Highest token confidence \\
+        mean\_token\_logprob & Independent & Average token log-probability \\
+        min\_token\_logprob & Independent & Lowest token log-probability \\
+        max\_token\_logprob & Independent & Highest token log-probability \\
+        sum\_token\_logprob & Independent & Total answer log-probability \\
+        negative\_mean\_logprob & Independent & Average uncertainty from log-probability \\
+        low\_confidence\_token\_ratio & Independent & Share of low-confidence tokens \\
+        mean\_token\_entropy & Independent & Average token uncertainty \\
+        min\_token\_entropy & Independent & Lowest token uncertainty \\
+        max\_token\_entropy & Independent & Highest token uncertainty \\
+        sum\_token\_entropy & Independent & Total answer entropy \\
+        high\_entropy\_token\_ratio & Independent & Share of high-entropy tokens \\
+        \bottomrule
+    \end{tabular}
+    \caption{Dependent and independent variables used by the classifiers.}
+    \label{tab:variables}
+\end{table}
+
+The prompt, context, and answer text are therefore not independent variables in the final classifier. They are inputs to the Qwen feature extraction step, and the classifier receives only the numerical features listed in Table \ref{tab:variables}.
+
+The original example identifiers are preserved in the processed files. These identifiers are later used for grouped train-test splitting so that answer variants from the same original question are not split across training and test sets.
+
+\newpage
 
 \section{Methodology}
 
 \subsection{Uncertainty Feature Extraction}
-% TODO: Explain how Qwen scores context/question/answer token probabilities.
-% TODO: Explain probability, log-probability, low-confidence ratio, and entropy features.
+The main idea of the methodology is to use an LLM as an uncertainty feature extractor rather than as the final hallucination judge. For each processed example, the prompt, optional context, and candidate answer are formatted into a scoring input. The Qwen model is then used to score the answer tokens conditioned on the preceding text. In other words, the model estimates how likely each answer token is given the question and, when available, the context passage.
+
+The model is not used to generate a new answer during this step. Instead, the existing candidate answer from the dataset is forced through the model token by token, and the probability of each observed answer token is recorded. This is important because the goal is to evaluate the uncertainty of the given answer, not to replace it with a new model-generated response. In the HaluEval with-context setting, the scoring input contains the context, question, and answer. In the no-context settings, the scoring input contains only the question and answer.
+
+For an answer token $y_t$, the model produces a probability distribution over the vocabulary. The probability assigned to the observed answer token is written as:
+
+\[
+p_t = P(y_t \mid x, y_{<t})
+\]
+
+where $x$ is the prompt and optional context, and $y_{<t}$ is the answer prefix before token $t$. A high value of $p_t$ means that the model considered the token likely in that position. A low value means that the token was less expected. The log-probability is computed as:
+
+\[
+\log(p_t)
+\]
+
+Log-probability is useful because it is numerically stable and additive across tokens. Since log-probabilities are usually negative, lower values indicate weaker model confidence. This project also uses the negative mean log-probability as an uncertainty feature, where higher values indicate greater uncertainty.
+
+Entropy is used to measure how spread out the model's next-token probability distribution is. For a token position $t$, entropy is computed as:
+
+\[
+H_t = - \sum_i P(v_i \mid x, y_{<t}) \log P(v_i \mid x, y_{<t})
+\]
+
+where $v_i$ represents a possible vocabulary token. Low entropy means the model strongly prefers a small number of next tokens. High entropy means the model is less certain because probability mass is distributed across many alternatives. This project aggregates token-level probabilities, log-probabilities, and entropy values into answer-level features such as mean token probability, minimum token probability, mean token entropy, maximum token entropy, low-confidence token ratio, and high-entropy token ratio.
+
+The ratio features are included because a small number of uncertain tokens may be more informative than the average confidence of the whole answer. The low-confidence token ratio measures the share of answer tokens with probability below 0.1, while the high-entropy token ratio measures the share of answer positions with entropy above 2.0. These thresholds provide simple summary indicators for whether an answer contains unusually uncertain token positions.
+
+These features are intended to capture whether the answer looks confident or uncertain from the perspective of the feature extractor model. The classifier does not see the raw wording of the answer directly. It only receives the numerical uncertainty summary produced from the answer tokens.
 
 \subsection{Feature Extractor Models}
-% TODO: Explain why Qwen2.5-3B is the main extractor and Qwen2.5-0.5B is used for comparison.
+Two open-source Qwen models are used for feature extraction: Qwen2.5-3B and Qwen2.5-0.5B. Qwen2.5-3B is treated as the main feature extractor because it is small enough to run locally but large enough to provide meaningful token-level probabilities. Qwen2.5-0.5B is used as a smaller comparison model. The purpose of using the smaller model is to test whether uncertainty features remain useful when the feature extractor has less model capacity.
+
+Both Qwen models are used in the same way. They are not asked, ``Is this answer hallucinated?'' Instead, they score the likelihood of the candidate answer token by token. This distinction is important because the project does not rely on direct LLM self-evaluation. The Qwen models produce uncertainty signals, and the final decision is made by separate machine learning classifiers trained on those signals.
+
+The comparison between Qwen2.5-3B and Qwen2.5-0.5B also helps evaluate the effect of model size. A larger feature extractor may assign more informative probabilities because it has stronger language understanding and factual knowledge. However, smaller models are cheaper and faster to run. Therefore, comparing both models provides a practical view of the trade-off between computational cost and uncertainty feature quality.
+
+This design also improves reproducibility. Both feature extractor models are open-source and can be run locally, so the experiment does not depend on a closed API or hidden model version. The results can therefore be re-created by downloading the same models and running the same feature extraction scripts.
 
 \subsection{Classification Models}
-% TODO: Explain Logistic Regression, Linear SVM, and Random Forest.
+After feature extraction, hallucination detection is treated as a standard supervised binary classification task. The dependent variable is the binary label, and the independent variables are the extracted uncertainty features listed in Table \ref{tab:variables}. Four classifiers are used: Logistic Regression, Linear Support Vector Machine, RBF-kernel Support Vector Machine, and Random Forest.
+
+Logistic Regression is used as a simple linear baseline. It estimates the probability that an example belongs to the hallucinated class based on a weighted combination of the uncertainty features. This model is useful because it is interpretable and shows whether a linear relationship between uncertainty features and hallucination labels is already strong.
+
+The Linear Support Vector Machine is another linear classifier, but it learns a decision boundary by maximizing the margin between the two classes. It is included because it often performs well on tabular feature sets and can be more robust than Logistic Regression when the classes are separated by a clear boundary in feature space.
+
+The RBF-kernel Support Vector Machine is included as a non-linear SVM. It can learn curved decision boundaries, which is useful when the uncertainty features do not separate the two classes linearly. This is especially relevant for TruthfulQA, where the PCA visualization suggests stronger class overlap.
+
+Random Forest is also used as a non-linear classifier. It combines many decision trees and can model interactions between features, such as cases where high entropy and low token probability together indicate hallucination. This makes Random Forest useful for testing whether non-linear feature combinations improve performance compared with the linear models.
+
+Before training Logistic Regression, Linear SVM, and RBF SVM, the numerical features are standardized so that features with larger numeric ranges do not dominate the learning process. Random Forest does not require the same scaling because tree-based models split features by thresholds. Using both linear and non-linear classifiers gives a balanced comparison between simple decision boundaries and more flexible classification models. If linear and non-linear models perform similarly, it suggests that the uncertainty features already separate the classes clearly. If non-linear models perform better, it suggests that feature interactions or curved boundaries are useful.
+
+\newpage
 
 \section{Experimental Setup}
-% TODO: Describe grouped 80/20 split, grouped 5-fold cross-validation, external transfer, context ablation, and feature ablation setup.
+The experiments answer three questions: whether uncertainty features separate supported and hallucinated answers within the same dataset, whether classifiers trained on HaluEval QA generalize to TruthfulQA, and how context and feature extractor size affect performance. The main evaluation uses a grouped 80/20 train-test split, where 80\% of question groups are used for training and 20\% are held out for testing. Grouping is based on the original question identifier, so answer variants from the same question do not appear in both training and test sets.
+
+The grouped 80/20 procedure is applied separately to HaluEval QA, HaluEval QA without context, and TruthfulQA. This gives a direct same-dataset estimate for each setting. To reduce dependence on one split, grouped 5-fold cross-validation is also used. Each fold is used once for testing while the remaining folds are used for training, and results are summarized using mean and standard deviation.
+
+External transfer experiments test dataset generalization by training on HaluEval QA and testing directly on TruthfulQA, with no re-training on TruthfulQA. A second transfer setting trains on HaluEval QA without context and tests on TruthfulQA to examine whether removing context makes the source dataset closer to the no-context target dataset. The context ablation compares HaluEval QA with context against the same examples scored without context, isolating the effect of supporting evidence on uncertainty features.
+
+The model-size comparison repeats the same evaluations with Qwen2.5-3B and Qwen2.5-0.5B feature extractors. This checks whether a much smaller extractor still produces useful uncertainty signals. Feature ablation compares three groups: confidence/log-probability features, entropy features, and all features combined. This tests how much each feature group contributes to performance.
+
+All split-based experiments use a fixed random seed to make the results reproducible. The evaluation scripts save both aggregate metric tables and per-example prediction files. The prediction files are useful for later error analysis because they show which examples were predicted correctly or incorrectly by each classifier.
+
+The experimental settings are complementary. Same-dataset tests measure performance under matched train and test conditions, while transfer tests measure whether learned patterns survive dataset shift. Context ablation and model-size comparison then help analyze why performance changes across settings.
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \begin{tabular}{lll}
+        \toprule
+        Experiment & Data Used & Purpose \\
+        \midrule
+        Grouped 80/20 & Each dataset separately & Main train-test evaluation \\
+        Grouped 5-fold CV & Each dataset separately & More stable performance estimate \\
+        External transfer & HaluEval to TruthfulQA & Test dataset generalization \\
+        Context ablation & HaluEval with/without context & Measure context effect \\
+        Model-size comparison & Qwen2.5-3B vs Qwen2.5-0.5B & Measure extractor-size effect \\
+        Feature ablation & Feature groups & Measure feature-group importance \\
+        \bottomrule
+    \end{tabular}
+    \caption{Experimental settings used in the project.}
+    \label{tab:experimental-settings}
+\end{table}
+
+The reported metrics are accuracy, precision, recall, F1 score, ROC-AUC, and confusion-matrix counts. F1 is emphasized because both false positives and false negatives matter; ROC-AUC is included because it evaluates ranking quality using classifier scores rather than only hard predictions. Together, these metrics show both threshold-based classification quality and score-based separability between supported and hallucinated answers.
 
 \section{Results}
 
 \subsection{Grouped 80/20 Evaluation}
-% TODO: Present HaluEval, TruthfulQA, and HaluEval-to-TruthfulQA results.
+Table \ref{tab:grouped-80-20-results} summarizes the main grouped 80/20 results using the Qwen2.5-3B feature extractor. HaluEval QA with context gives the strongest same-dataset performance. The best F1 score is 0.9885 with Linear SVM, and all classifiers are very close to each other. This indicates that the extracted uncertainty features separate supported and hallucinated HaluEval QA answers very clearly when context is available.
+
+TruthfulQA is much harder. The best F1 score is 0.7037 with RBF SVM, while Random Forest gives the highest ROC-AUC at 0.6894. This shows that the same type of uncertainty features are less separable on TruthfulQA, although the non-linear RBF SVM gives a modest F1 improvement over the linear models. The result is expected because TruthfulQA is a no-context misconception dataset rather than a context-grounded hallucination dataset.
+
+The external transfer setting is weaker. Training on HaluEval QA and testing directly on TruthfulQA gives a best F1 score of 0.6311 with Random Forest, with ROC-AUC below 0.5. This suggests that the decision patterns learned from HaluEval QA do not transfer cleanly to TruthfulQA. The result should be interpreted as evidence of dataset shift, not as a failure of the classifiers alone.
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabular}{llccc}
+        \toprule
+        Setting & Best F1 Model & Accuracy & F1 & ROC-AUC \\
+        \midrule
+        HaluEval QA & Linear SVM & 0.9885 & 0.9885 & 0.9986 \\
+        TruthfulQA & RBF SVM & 0.6272 & 0.7037 & 0.6830 \\
+        HaluEval QA $\rightarrow$ TruthfulQA & Random Forest & 0.4902 & 0.6311 & 0.3985 \\
+        HaluEval QA no-context & Random Forest & 0.9278 & 0.9276 & 0.9699 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Grouped 80/20 and transfer results using Qwen2.5-3B features.}
+    \label{tab:grouped-80-20-results}
+\end{table}
+
+Figures \ref{fig:halueval-pca-boundaries} and \ref{fig:truthfulqa-pca-boundaries} visualize the feature space using a two-dimensional PCA projection. These plots are only for interpretation: the actual classifiers are trained on the full uncertainty feature set, not only on the two PCA dimensions. HaluEval QA shows clearer separation between the two labels, while TruthfulQA shows more overlap.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../outputs/figures/halueval_qa_pca_decision_boundary.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png}
+    \end{minipage}
+    \caption{HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. The Random Forest plot is more flexible, but both views show strong class separability.}
+    \label{fig:halueval-pca-boundaries}
+\end{figure}
+
+Figure \ref{fig:truthfulqa-pca-boundaries} compares a linear TruthfulQA boundary with the RBF SVM boundary. The RBF SVM boundary is smoother and curved, which helps explain why it slightly improves TruthfulQA F1. However, the classes still overlap substantially, so the nonlinear model does not fully solve the TruthfulQA difficulty.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../outputs/figures/truthfulqa_pca_decision_boundary.png}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png}
+    \end{minipage}
+    \caption{TruthfulQA PCA decision-boundary visualizations with a linear boundary and an RBF SVM boundary. The plot is interpretive only; final model training uses the full uncertainty feature set.}
+    \label{fig:truthfulqa-pca-boundaries}
+\end{figure}
 
 \subsection{Grouped Cross-Validation}
-% TODO: Present 3B vs 0.5B cross-validation results.
+Grouped 5-fold cross-validation confirms the same overall pattern. HaluEval QA with context remains the easiest setting, with mean F1 around 0.988 for Qwen2.5-3B features. Qwen2.5-0.5B features also perform strongly on HaluEval QA, but with lower mean F1 around 0.976. This suggests that the smaller model still produces useful uncertainty features, although the larger model gives a small advantage in the context-grounded setting.
 
-\begin{figure}[H]
+On TruthfulQA, both feature extractors perform much lower, with best mean F1 around 0.718 using RBF SVM. The difference between Qwen2.5-3B and Qwen2.5-0.5B is small in this setting. This suggests that TruthfulQA difficulty is not only caused by feature extractor size; it is also related to the no-context and misconception-focused nature of the dataset.
+
+\begin{table}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{../../outputs/figures/cv_model_size_comparison.png}
-    \caption{Grouped 5-fold cross-validation comparison between Qwen2.5-3B and Qwen2.5-0.5B feature extractors.}
-    \label{fig:cv-model-size}
-\end{figure}
+    \small
+    \begin{tabular}{llccc}
+        \toprule
+        Dataset & Feature Extractor & Best F1 Model & Mean F1 & Mean ROC-AUC \\
+        \midrule
+        HaluEval QA & Qwen2.5-3B & RBF SVM & 0.9883 & 0.9979 \\
+        HaluEval QA & Qwen2.5-0.5B & RBF SVM & 0.9759 & 0.9939 \\
+        TruthfulQA & Qwen2.5-3B & RBF SVM & 0.7173 & 0.6826 \\
+        TruthfulQA & Qwen2.5-0.5B & RBF SVM & 0.7181 & 0.6820 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Grouped 5-fold cross-validation summary for model-size comparison.}
+    \label{tab:cv-summary-results}
+\end{table}
 
 \subsection{Context Ablation: HaluEval With and Without Context}
-% TODO: Compare HaluEval with context, HaluEval without context, and TruthfulQA no-context results.
-% TODO: Explain that context improves performance, but HaluEval no-context is still easier than TruthfulQA.
+The context ablation shows that context matters, but it does not fully explain the difference between HaluEval QA and TruthfulQA. With Qwen2.5-3B features, HaluEval QA cross-validation F1 drops from approximately 0.9883 with context to approximately 0.9277 without context. This is a meaningful decrease, showing that the supporting passage helps the feature extractor assign more useful uncertainty scores.
 
-\begin{figure}[H]
+However, HaluEval QA without context still performs much better than TruthfulQA. This means that HaluEval no-context is not equivalent to TruthfulQA. HaluEval examples may still contain answer-style or question-answer artifacts that make the classification task easier. TruthfulQA is harder because many incorrect answers are plausible misconceptions, and there is no evidence passage to contradict them.
+
+\begin{table}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{../../outputs/figures/context_effect_comparison.png}
-    \caption{Effect of context on grouped cross-validation F1 scores. HaluEval with context performs best, HaluEval without context drops but remains strong, and TruthfulQA remains the hardest no-context setting.}
-    \label{fig:context-effect}
-\end{figure}
+    \small
+    \begin{tabular}{llccc}
+        \toprule
+        Setting & Feature Extractor & Best CV Model & Mean F1 & Mean ROC-AUC \\
+        \midrule
+        HaluEval with context & Qwen2.5-3B & RBF SVM & 0.9883 & 0.9979 \\
+        HaluEval no-context & Qwen2.5-3B & Random Forest & 0.9277 & 0.9711 \\
+        HaluEval no-context & Qwen2.5-0.5B & Random Forest & 0.9271 & 0.9701 \\
+        TruthfulQA no-context & Qwen2.5-3B & RBF SVM & 0.7173 & 0.6826 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Context ablation and no-context comparison using grouped cross-validation.}
+    \label{tab:context-ablation-results}
+\end{table}
 
 \subsection{ROC Curves}
+The ROC curves provide a score-based view of the same findings. HaluEval QA has near-perfect separability, and HaluEval QA without context remains strong. TruthfulQA has a much weaker ROC curve, showing that classifier scores do not rank truthful and incorrect examples as cleanly. This supports the conclusion that uncertainty features are highly effective for the context-grounded HaluEval QA setting but less reliable for no-context truthfulness detection.
 
 \begin{figure}[H]
     \centering
