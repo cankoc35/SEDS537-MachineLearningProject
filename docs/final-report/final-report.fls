@@ -173,11 +173,6 @@ INPUT ../../outputs/figures/roc_curves.png
 INPUT ../../outputs/figures/roc_curves.png
 INPUT ../../outputs/figures/roc_curves.png
 INPUT ../../outputs/figures/roc_curves.png
-INPUT ../../outputs/figures/ablation_feature_group_comparison.png
-INPUT ../../outputs/figures/ablation_feature_group_comparison.png
-INPUT ../../outputs/figures/ablation_feature_group_comparison.png
-INPUT ../../outputs/figures/ablation_feature_group_comparison.png
-INPUT ../../outputs/figures/ablation_feature_group_comparison.png
 INPUT ../../outputs/figures/confusion_matrices.png
 INPUT ../../outputs/figures/confusion_matrices.png
 INPUT ../../outputs/figures/confusion_matrices.png

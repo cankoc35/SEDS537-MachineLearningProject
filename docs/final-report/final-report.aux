@@ -21,32 +21,32 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Uncertainty Feature Extraction}{6}{subsection.4.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Feature Extractor Models}{7}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Classification Models}{7}{subsection.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup}{9}{section.5}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Experimental settings used in the project.}}{9}{table.3}\protected@file@percent }
-\newlabel{tab:experimental-settings}{{3}{9}{Experimental settings used in the project}{table.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{10}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Grouped 80/20 Evaluation}{10}{subsection.6.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Grouped 80/20 and transfer results using Qwen2.5-3B features.}}{10}{table.4}\protected@file@percent }
-\newlabel{tab:grouped-80-20-results}{{4}{10}{Grouped 80/20 and transfer results using Qwen2.5-3B features}{table.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. The Random Forest plot is more flexible, but both views show strong class separability.}}{11}{figure.1}\protected@file@percent }
-\newlabel{fig:halueval-pca-boundaries}{{1}{11}{HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. The Random Forest plot is more flexible, but both views show strong class separability}{figure.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces TruthfulQA PCA decision-boundary visualizations with a linear boundary and an RBF SVM boundary. The plot is interpretive only; final model training uses the full uncertainty feature set.}}{11}{figure.2}\protected@file@percent }
-\newlabel{fig:truthfulqa-pca-boundaries}{{2}{11}{TruthfulQA PCA decision-boundary visualizations with a linear boundary and an RBF SVM boundary. The plot is interpretive only; final model training uses the full uncertainty feature set}{figure.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Grouped Cross-Validation}{11}{subsection.6.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Grouped 5-fold cross-validation summary for model-size comparison.}}{12}{table.5}\protected@file@percent }
-\newlabel{tab:cv-summary-results}{{5}{12}{Grouped 5-fold cross-validation summary for model-size comparison}{table.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Context Ablation: HaluEval With and Without Context}{12}{subsection.6.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Context ablation and no-context comparison using grouped cross-validation.}}{12}{table.6}\protected@file@percent }
-\newlabel{tab:context-ablation-results}{{6}{12}{Context ablation and no-context comparison using grouped cross-validation}{table.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}ROC Curves}{12}{subsection.6.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces ROC curves for the best grouped 80/20 models.}}{13}{figure.3}\protected@file@percent }
-\newlabel{fig:roc-curves}{{3}{13}{ROC curves for the best grouped 80/20 models}{figure.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Ablation Study}{14}{section.7}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Ablation comparison across confidence/log-probability, entropy, and all feature groups.}}{14}{figure.4}\protected@file@percent }
-\newlabel{fig:ablation}{{4}{14}{Ablation comparison across confidence/log-probability, entropy, and all feature groups}{figure.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Error Analysis}{15}{section.8}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Confusion matrices for the best grouped 80/20 classifiers.}}{15}{figure.5}\protected@file@percent }
-\newlabel{fig:confusion}{{5}{15}{Confusion matrices for the best grouped 80/20 classifiers}{figure.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experimental Setup}{8}{section.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Experimental settings used in the project.}}{8}{table.3}\protected@file@percent }
+\newlabel{tab:experimental-settings}{{3}{8}{Experimental settings used in the project}{table.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Results}{9}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Grouped 80/20 Evaluation}{9}{subsection.6.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Grouped 80/20 and transfer results using Qwen2.5-3B features.}}{9}{table.4}\protected@file@percent }
+\newlabel{tab:grouped-80-20-results}{{4}{9}{Grouped 80/20 and transfer results using Qwen2.5-3B features}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. Both views show strong class separability.}}{9}{figure.1}\protected@file@percent }
+\newlabel{fig:halueval-pca-boundaries}{{1}{9}{HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. Both views show strong class separability}{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces TruthfulQA PCA decision-boundary visualizations with a linear boundary and an RBF SVM boundary. The plot is interpretive only; final model training uses the full uncertainty feature set.}}{10}{figure.2}\protected@file@percent }
+\newlabel{fig:truthfulqa-pca-boundaries}{{2}{10}{TruthfulQA PCA decision-boundary visualizations with a linear boundary and an RBF SVM boundary. The plot is interpretive only; final model training uses the full uncertainty feature set}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Grouped Cross-Validation}{10}{subsection.6.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Grouped 5-fold cross-validation summary for model-size comparison.}}{10}{table.5}\protected@file@percent }
+\newlabel{tab:cv-summary-results}{{5}{10}{Grouped 5-fold cross-validation summary for model-size comparison}{table.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Context Ablation: HaluEval With and Without Context}{10}{subsection.6.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Context ablation and no-context comparison using grouped cross-validation.}}{11}{table.6}\protected@file@percent }
+\newlabel{tab:context-ablation-results}{{6}{11}{Context ablation and no-context comparison using grouped cross-validation}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}ROC Curves}{11}{subsection.6.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces ROC curves for the best grouped 80/20 models.}}{11}{figure.3}\protected@file@percent }
+\newlabel{fig:roc-curves}{{3}{11}{ROC curves for the best grouped 80/20 models}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Ablation Study}{12}{section.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Feature-group ablation results using Qwen2.5-3B features and grouped 80/20 evaluation.}}{12}{table.7}\protected@file@percent }
+\newlabel{tab:ablation-results}{{7}{12}{Feature-group ablation results using Qwen2.5-3B features and grouped 80/20 evaluation}{table.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Error Analysis}{13}{section.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Confusion matrices for the best grouped 80/20 classifiers.}}{13}{figure.4}\protected@file@percent }
+\newlabel{fig:confusion}{{4}{13}{Confusion matrices for the best grouped 80/20 classifiers}{figure.4}{}}
 \bibstyle{plain}
 \bibdata{references}
 \bibcite{calibration2025halueval}{1}
@@ -56,9 +56,9 @@
 \bibcite{friel2023chainpoll}{5}
 \bibcite{kossen2024semanticprobes}{6}
 \bibcite{li2023halueval}{7}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Selected uncertainty feature means by dataset and label.}}{16}{figure.6}\protected@file@percent }
-\newlabel{fig:feature-shift}{{6}{16}{Selected uncertainty feature means by dataset and label}{figure.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {9}Discussion and Limitations}{16}{section.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{16}{section.10}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Selected uncertainty feature means by dataset and label.}}{14}{figure.5}\protected@file@percent }
+\newlabel{fig:feature-shift}{{5}{14}{Selected uncertainty feature means by dataset and label}{figure.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Discussion and Limitations}{14}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Conclusion}{14}{section.10}\protected@file@percent }
 \bibcite{lin2022truthfulqa}{8}
-\gdef \@abspage@last{17}
+\gdef \@abspage@last{15}

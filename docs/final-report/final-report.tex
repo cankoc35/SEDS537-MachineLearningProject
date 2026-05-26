@@ -175,7 +175,7 @@ Both Qwen models are used in the same way. They are not asked, ``Is this answer 
 
 The comparison between Qwen2.5-3B and Qwen2.5-0.5B also helps evaluate the effect of model size. A larger feature extractor may assign more informative probabilities because it has stronger language understanding and factual knowledge. However, smaller models are cheaper and faster to run. Therefore, comparing both models provides a practical view of the trade-off between computational cost and uncertainty feature quality.
 
-This design also improves reproducibility. Both feature extractor models are open-source and can be run locally, so the experiment does not depend on a closed API or hidden model version. The results can therefore be re-created by downloading the same models and running the same feature extraction scripts.
+This design also improves reproducibility. Both feature extractor models are open-source and can be run locally, so the experiment does not depend on a closed API or hidden model version.
 
 \subsection{Classification Models}
 After feature extraction, hallucination detection is treated as a standard supervised binary classification task. The dependent variable is the binary label, and the independent variables are the extracted uncertainty features listed in Table \ref{tab:variables}. Four classifiers are used: Logistic Regression, Linear Support Vector Machine, RBF-kernel Support Vector Machine, and Random Forest.
@@ -188,7 +188,7 @@ The RBF-kernel Support Vector Machine is included as a non-linear SVM. It can le
 
 Random Forest is also used as a non-linear classifier. It combines many decision trees and can model interactions between features, such as cases where high entropy and low token probability together indicate hallucination. This makes Random Forest useful for testing whether non-linear feature combinations improve performance compared with the linear models.
 
-Before training Logistic Regression, Linear SVM, and RBF SVM, the numerical features are standardized so that features with larger numeric ranges do not dominate the learning process. Random Forest does not require the same scaling because tree-based models split features by thresholds. Using both linear and non-linear classifiers gives a balanced comparison between simple decision boundaries and more flexible classification models. If linear and non-linear models perform similarly, it suggests that the uncertainty features already separate the classes clearly. If non-linear models perform better, it suggests that feature interactions or curved boundaries are useful.
+Before training Logistic Regression, Linear SVM, and RBF SVM, the numerical features are standardized so that features with larger numeric ranges do not dominate the learning process. Random Forest does not require the same scaling because tree-based models split features by thresholds. Using both linear and non-linear classifiers gives a balanced comparison between simple decision boundaries and more flexible classification models. If non-linear models perform better, it suggests that feature interactions or curved boundaries are useful.
 
 \newpage
 
@@ -252,20 +252,20 @@ The external transfer setting is weaker. Training on HaluEval QA and testing dir
     \label{tab:grouped-80-20-results}
 \end{table}
 
-Figures \ref{fig:halueval-pca-boundaries} and \ref{fig:truthfulqa-pca-boundaries} visualize the feature space using a two-dimensional PCA projection. These plots are only for interpretation: the actual classifiers are trained on the full uncertainty feature set, not only on the two PCA dimensions. HaluEval QA shows clearer separation between the two labels, while TruthfulQA shows more overlap.
+Figures \ref{fig:halueval-pca-boundaries} and \ref{fig:truthfulqa-pca-boundaries} visualize the feature space using a two-dimensional PCA projection. These plots are interpretive only; the actual classifiers use the full uncertainty feature set. HaluEval QA shows clearer separation, while TruthfulQA shows more overlap.
 
 \begin{figure}[H]
     \centering
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.46\textwidth}
         \centering
         \includegraphics[width=\textwidth]{../../outputs/figures/halueval_qa_pca_decision_boundary.png}
     \end{minipage}
     \hfill
-    \begin{minipage}{0.48\textwidth}
+    \begin{minipage}{0.46\textwidth}
         \centering
         \includegraphics[width=\textwidth]{../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png}
     \end{minipage}
-    \caption{HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. The Random Forest plot is more flexible, but both views show strong class separability.}
+    \caption{HaluEval QA PCA decision-boundary visualizations with a linear boundary and a Random Forest boundary. Both views show strong class separability.}
     \label{fig:halueval-pca-boundaries}
 \end{figure}
 
@@ -341,14 +341,33 @@ The ROC curves provide a score-based view of the same findings. HaluEval QA has 
 \end{figure}
 
 \section{Ablation Study}
-% TODO: Compare confidence/logprob features, entropy features, and all features.
+The ablation study tests whether hallucination detection depends mainly on confidence and log-probability features, entropy features, or the full feature set. This is important because the proposed method uses several related uncertainty signals, and ablation helps identify whether one group is carrying most of the predictive information.
 
-\begin{figure}[H]
+Table \ref{tab:ablation-results} reports the main Qwen2.5-3B ablation results. On HaluEval QA, using all features gives the best F1 score, which suggests that confidence, log-probability, and entropy features provide complementary information in the context-grounded setting. Confidence and log-probability features alone are also strong, while entropy-only features are weaker but still informative.
+
+TruthfulQA behaves differently. Entropy-only features with RBF SVM give the highest F1 in this grouped 80/20 split, while the full feature set gives stronger ROC-AUC than the entropy-only setting. This means that entropy is especially useful for TruthfulQA, but the overall separation between truthful and incorrect answers remains limited. Therefore, the ablation results support keeping the full feature set for the main detector while also showing that entropy is an important component.
+
+\begin{table}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{../../outputs/figures/ablation_feature_group_comparison.png}
-    \caption{Ablation comparison across confidence/log-probability, entropy, and all feature groups.}
-    \label{fig:ablation}
-\end{figure}
+    \small
+    \begin{tabular}{llccc}
+        \toprule
+        Dataset & Feature Group & Best F1 Model & F1 & ROC-AUC \\
+        \midrule
+        HaluEval QA & Confidence + log-prob. & RBF SVM & 0.9858 & 0.9980 \\
+        HaluEval QA & Entropy & RBF SVM & 0.9720 & 0.9921 \\
+        HaluEval QA & All features & Linear SVM & 0.9885 & 0.9986 \\
+        \midrule
+        TruthfulQA & Confidence + log-prob. & RBF SVM & 0.6904 & 0.6359 \\
+        TruthfulQA & Entropy & RBF SVM & 0.7160 & 0.6491 \\
+        TruthfulQA & All features & RBF SVM & 0.7037 & 0.6830 \\
+        \bottomrule
+    \end{tabular}
+    \caption{Feature-group ablation results using Qwen2.5-3B features and grouped 80/20 evaluation.}
+    \label{tab:ablation-results}
+\end{table}
+
+The full ablation outputs for Qwen2.5-0.5B and transfer evaluation are saved in the output tables. They show the same broad pattern: HaluEval benefits most from the full feature set, while TruthfulQA remains more sensitive to entropy and more difficult overall.
 
 \section{Error Analysis}
 % TODO: Explain confusion matrices and feature distribution shift.
