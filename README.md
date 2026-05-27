@@ -110,7 +110,7 @@ data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
 ├── src/
 │   ├── data/                        # download and preprocessing
 │   ├── evaluation/                  # metrics, evaluation, error analysis
-│   ├── features/                    # uncertainty, consistency, RAG placeholders
+│   ├── features/                    # uncertainty feature extraction
 │   ├── generation/                  # Qwen scoring and feature extraction
 │   ├── models/                      # classifier definitions
 │   └── utils/

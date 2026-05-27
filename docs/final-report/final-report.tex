@@ -367,30 +367,59 @@ TruthfulQA behaves differently. Entropy-only features with RBF SVM give the high
     \label{tab:ablation-results}
 \end{table}
 
-The full ablation outputs for Qwen2.5-0.5B and transfer evaluation are saved in the output tables. They show the same broad pattern: HaluEval benefits most from the full feature set, while TruthfulQA remains more sensitive to entropy and more difficult overall.
+The full ablation outputs for Qwen2.5-0.5B and transfer evaluation show the same broad pattern.
+
+\subsection{Interpretation}
+The HaluEval ablation results show that confidence-based signals are already highly predictive. This is reasonable because HaluEval QA provides a supporting passage, so unsupported answers often contain tokens that are less compatible with the context and question. When entropy features are added, the classifier receives an additional view of uncertainty: not only how likely the observed answer tokens are, but also how spread out the model's alternatives were at each token position.
+
+The TruthfulQA result is more subtle. Entropy-only features produce the highest F1 score in the ablation table, but the all-feature setting gives better ROC-AUC. This means that entropy is useful for choosing a hard class label in this split, while the full feature set gives a better ranking of examples by hallucination score. Since this project evaluates both F1 and ROC-AUC, the result does not justify removing confidence or log-probability features. Instead, it shows that different uncertainty signals help in different ways.
+
+Another important observation is that ablation does not remove the dataset gap. Even the best TruthfulQA ablation result remains far below the HaluEval result. This supports the main interpretation of the project: feature selection matters, but the harder issue is the difference between context-grounded hallucination detection and no-context truthfulness detection.
+
+\newpage
 
 \section{Error Analysis}
-% TODO: Explain confusion matrices and feature distribution shift.
+Error analysis is used to understand where the detector fails. The confusion matrices show that HaluEval QA has very few mistakes, while TruthfulQA has many more errors. This matches the earlier metric results: HaluEval examples are easier to separate using uncertainty features, while TruthfulQA examples produce more ambiguous confidence and entropy patterns.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{../../outputs/figures/confusion_matrices.png}
-    \caption{Confusion matrices for the best grouped 80/20 classifiers.}
-    \label{fig:confusion}
-\end{figure}
+\begin{center}
+    \includegraphics[width=0.50\textwidth]{../../outputs/figures/confusion_matrices.png}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{../../outputs/figures/feature_distribution_shift.png}
-    \caption{Selected uncertainty feature means by dataset and label.}
-    \label{fig:feature-shift}
-\end{figure}
+    \small Confusion matrices for the best grouped 80/20 classifiers.
+\end{center}
+
+The most important TruthfulQA error pattern is false positives: many truthful answers are predicted as hallucinated. This happens because truthful answers in TruthfulQA often reject common myths or misconceptions. Such answers can look less familiar to the language model, so they may receive lower token probabilities or higher entropy even when they are correct.
+
+False negatives are also possible. Some incorrect TruthfulQA answers correspond to popular myths, stereotypes, or common false beliefs. Because these claims are frequent in text, the feature extractor may assign them relatively confident token probabilities. In those cases, an incorrect answer can look certain rather than uncertain, which weakens the detector.
+
+The feature distribution analysis supports this explanation. Compared with HaluEval, TruthfulQA has higher maximum token entropy (3.34 versus 2.30), higher mean token entropy (1.36 versus 0.86), lower mean token probability (0.53 versus 0.69), and a larger low-confidence token ratio (0.30 versus 0.15). These shifts affect both truthful and incorrect examples, so the classes overlap more strongly in the uncertainty-feature space.
+
+Overall, the error analysis shows that the detector is not simply failing because the classifiers are weak. The main issue is that uncertainty behaves differently across datasets. In HaluEval, uncertainty is strongly connected to whether the answer is supported by the question and passage. In TruthfulQA, uncertainty is also affected by whether an answer sounds familiar, common, or misconception-like. This makes TruthfulQA a harder test for uncertainty-only hallucination detection and explains why the same feature extraction pipeline gives much lower separability there.
+
+\newpage
 
 \section{Discussion and Limitations}
-% TODO: Discuss strong HaluEval performance, the measured effect of removing context, weaker TruthfulQA performance, dataset shift, and context dependence.
+The results show that uncertainty features are useful for hallucination detection, but their usefulness depends strongly on the evaluation setting. On HaluEval QA, the classifiers achieve very high performance because the feature extractor can use the question, answer, and supporting passage to assign uncertainty to the candidate answer. In this setting, unsupported answers often contain tokens that are less compatible with the provided evidence, so probability, log-probability, and entropy features become strong signals for the downstream classifier.
+
+The no-context HaluEval experiment gives a more careful view of this result. Removing the context reduces performance, which confirms that evidence helps the uncertainty signal. However, the decrease is not as large as the decrease observed on TruthfulQA. This suggests that HaluEval remains easier even without the passage. One likely reason is that HaluEval supported and hallucinated answers are generated in paired form from the same QA examples. As a result, the hallucinated answers may still contain answer-level patterns that are easier for the classifier to separate. Therefore, high HaluEval performance should not be interpreted as proof that the detector can solve all hallucination detection settings.
+
+TruthfulQA is a harder and more realistic stress test for uncertainty-only detection. Many TruthfulQA questions are designed around misconceptions, myths, or commonly repeated false claims. In this setting, a false answer can sound familiar to the language model and receive high confidence, while a truthful answer may reject a common misconception and receive lower confidence. This weakens the assumption that low uncertainty always means factual correctness. The lower TruthfulQA performance therefore does not only reflect weaker classifiers; it reflects a harder data distribution where model confidence and truthfulness are less directly aligned.
+
+The transfer experiments also show the limitation of dataset generalization. A classifier trained on HaluEval features does not transfer well to TruthfulQA because the uncertainty distributions are different. The same feature names are used in both datasets, but their meaning changes with the task. In HaluEval, uncertainty often measures compatibility with evidence. In TruthfulQA, uncertainty also reflects how familiar or common a claim is in the model's pretraining distribution. This is an important limitation for real-world use, where the detector may face questions and answer styles that differ from the training dataset.
+
+Another limitation is the choice of feature extractor models. Qwen2.5-3B and Qwen2.5-0.5B are practical open-source models that can be run locally, which makes the experiments reproducible on limited hardware. However, they are not the strongest possible language models. Larger or better-calibrated models might produce more reliable token probabilities and entropy values, especially for no-context truthfulness questions. At the same time, relying on larger models would increase computational cost and would not remove the basic issue that internal confidence is not the same as factual evidence.
+
+Finally, this project focuses mainly on uncertainty-based features. The original project direction included response consistency and retrieval-based evidence agreement, but the completed implementation emphasizes token probability, log-probability, entropy, and derived uncertainty ratios. This is a reasonable scope for a machine learning project, but it means the final detector should be described as an uncertainty-feature detector rather than a complete retrieval-augmented hallucination detector. A stronger future system should combine uncertainty with retrieved evidence, source agreement, and self-consistency checks.
 
 \section{Conclusion}
-% TODO: Summarize the final findings and future work.
+This project studied hallucination detection as a binary classification problem using uncertainty features extracted from open-source language models. Candidate answers were scored token by token with Qwen2.5-3B and Qwen2.5-0.5B, and the resulting probability, log-probability, entropy, and confidence-ratio features were used to train Logistic Regression, SVM, RBF SVM, and Random Forest classifiers.
+
+The experiments show that uncertainty features are highly effective on HaluEval QA, especially when supporting context is available. Removing the context decreases performance, confirming that evidence helps the feature extractor produce more useful uncertainty signals. However, HaluEval remains much easier than TruthfulQA even without context. TruthfulQA produces lower performance because it focuses on misconceptions and common false beliefs, where incorrect answers can sound familiar and truthful answers can appear less probable.
+
+The ablation study shows that confidence, log-probability, and entropy features all contribute useful information. The full feature set gives the strongest HaluEval result, while entropy is especially useful on TruthfulQA. The model-size comparison also shows that the smaller Qwen2.5-0.5B model can still produce useful uncertainty features, although the larger Qwen2.5-3B model remains the main feature extractor in this project.
+
+Overall, the project supports the conclusion that uncertainty-based hallucination detection is promising for context-grounded QA settings, but it is not sufficient by itself for robust no-context truthfulness detection. Future work should combine uncertainty features with retrieval-based evidence agreement, source verification, and response consistency so that the detector is not relying only on the language model's internal confidence.
+
+\newpage
 
 \bibliographystyle{plain}
 \bibliography{references}

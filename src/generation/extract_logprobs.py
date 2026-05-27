@@ -41,11 +41,6 @@ FEATURE_COLUMNS = [
 METADATA_COLUMNS = ["id", "dataset", "task", "label", "source", "model", "device"]
 
 
-def extract_logprobs(generation_output):
-    """Return token-level confidence information."""
-    raise NotImplementedError("Implement logprob extraction for the selected model stack.")
-
-
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Preview processed examples before logprob extraction."

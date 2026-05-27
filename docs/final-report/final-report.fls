@@ -178,11 +178,6 @@ INPUT ../../outputs/figures/confusion_matrices.png
 INPUT ../../outputs/figures/confusion_matrices.png
 INPUT ../../outputs/figures/confusion_matrices.png
 INPUT ../../outputs/figures/confusion_matrices.png
-INPUT ../../outputs/figures/feature_distribution_shift.png
-INPUT ../../outputs/figures/feature_distribution_shift.png
-INPUT ../../outputs/figures/feature_distribution_shift.png
-INPUT ../../outputs/figures/feature_distribution_shift.png
-INPUT ../../outputs/figures/feature_distribution_shift.png
 INPUT ./final-report.bbl
 INPUT ./final-report.bbl
 INPUT final-report.bbl

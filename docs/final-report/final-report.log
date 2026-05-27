@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  26 MAY 2026 23:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.12.28)  27 MAY 2026 16:45
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -428,7 +428,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
                                                   \__shipout_drop_firstpage_...
 l.233 
       ]
-<../../outputs/figures/halueval_qa_pca_decision_boundary.png, id=141, 498.663pt
+<../../outputs/figures/halueval_qa_pca_decision_boundary.png, id=145, 498.663pt
  x 389.17395pt>
 File: ../../outputs/figures/halueval_qa_pca_decision_boundary.png Graphic file 
 (type png)
@@ -437,7 +437,7 @@ Package pdftex.def Info: ../../outputs/figures/halueval_qa_pca_decision_boundar
 y.png  used on input line 261.
 (pdftex.def)             Requested size: 216.09045pt x 168.64201pt.
 <../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png, id=
-143, 498.663pt x 389.17395pt>
+147, 498.663pt x 389.17395pt>
 File: ../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png
  Graphic file (type png)
 <use ../../outputs/figures/halueval_qa_pca_decision_boundary_random_forest.png>
@@ -461,7 +461,7 @@ s been already used, duplicate ignored
 l.273 
        <../../outputs/figures/halueval_qa_pca_decision_boundary.png> <../../out
 puts/figures/halueval_qa_pca_decision_boundary_random_forest.png>]
-<../../outputs/figures/truthfulqa_pca_decision_boundary.png, id=154, 498.30165p
+<../../outputs/figures/truthfulqa_pca_decision_boundary.png, id=158, 498.30165p
 t x 389.17395pt>
 File: ../../outputs/figures/truthfulqa_pca_decision_boundary.png Graphic file (
 type png)
@@ -469,7 +469,7 @@ type png)
 Package pdftex.def Info: ../../outputs/figures/truthfulqa_pca_decision_boundary
 .png  used on input line 278.
 (pdftex.def)             Requested size: 225.4804pt x 176.10052pt.
-<../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png, id=155, 49
+<../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png, id=159, 49
 8.30165pt x 389.17395pt>
 File: ../../outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png Graphi
 c file (type png)
@@ -493,7 +493,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
 l.315 
        <../../outputs/figures/truthfulqa_pca_decision_boundary.png> <../../outp
 uts/figures/truthfulqa_pca_decision_boundary_rbf_svm.png>]
-<../../outputs/figures/roc_curves.png, id=164, 570.933pt x 425.30894pt>
+<../../outputs/figures/roc_curves.png, id=168, 570.933pt x 425.30894pt>
 File: ../../outputs/figures/roc_curves.png Graphic file (type png)
 <use ../../outputs/figures/roc_curves.png>
 Package pdftex.def Info: ../../outputs/figures/roc_curves.png  used on input li
@@ -514,64 +514,45 @@ s been already used, duplicate ignored
                                                   \__shipout_drop_firstpage_...
 l.345 
        <../../outputs/figures/roc_curves.png>]
-<../../outputs/figures/confusion_matrices.png, id=173, 559.3698pt x 499.02435pt
->
-File: ../../outputs/figures/confusion_matrices.png Graphic file (type png)
-<use ../../outputs/figures/confusion_matrices.png>
-Package pdftex.def Info: ../../outputs/figures/confusion_matrices.png  used on 
-input line 377.
-(pdftex.def)             Requested size: 399.29463pt x 356.22862pt.
-
 
 [12
 pdfTeX warning (ext4): destination with the same identifier (name{table.7}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.381 
-      ]
-<../../outputs/figures/feature_distribution_shift.png, id=179, 715.83435pt x 49
-9.02435pt>
-File: ../../outputs/figures/feature_distribution_shift.png Graphic file (type p
-ng)
-<use ../../outputs/figures/feature_distribution_shift.png>
-Package pdftex.def Info: ../../outputs/figures/feature_distribution_shift.png  
-used on input line 384.
-(pdftex.def)             Requested size: 399.29463pt x 278.36285pt.
+l.379 \newpage
+              ]
+<../../outputs/figures/confusion_matrices.png, id=182, 559.3698pt x 499.02435pt
+>
+File: ../../outputs/figures/confusion_matrices.png Graphic file (type png)
+<use ../../outputs/figures/confusion_matrices.png>
+Package pdftex.def Info: ../../outputs/figures/confusion_matrices.png  used on 
+input line 385.
+(pdftex.def)             Requested size: 234.8775pt x 209.53549pt.
 
 
-[13
-pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
-s been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.388 
-       <../../outputs/figures/confusion_matrices.png>] (./final-report.bbl
+[13 <../../outputs/figures/confusion_matrices.png>]
 
-[14
-pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
-s been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.45 
-      <../../outputs/figures/feature_distribution_shift.png>])
+[14]
 
-[15] (./final-report.aux)
+[15] (./final-report.bbl)
+
+[16] (./final-report.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `final-report.out' has not changed.
-(rerunfilecheck)             Checksum: 97284DFE2927C310E5BAA51325475500;2577.
+(rerunfilecheck)             Checksum: 9DBFF8553D1ADBC26A1144A4576687C9;2705.
  ) 
 Here is how much of TeX's memory you used:
- 9928 strings out of 474662
- 155811 string characters out of 5751108
- 564895 words of memory out of 5000000
- 32807 multiletter control sequences out of 15000+600000
+ 9920 strings out of 474662
+ 155386 string characters out of 5751108
+ 564740 words of memory out of 5000000
+ 32799 multiletter control sequences out of 15000+600000
  566843 words of font info for 64 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
- 75i,9n,79p,962b,559s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,9n,79p,962b,441s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx1
 0.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/cm/c
 mbx12.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1/public/amsfonts/
@@ -584,10 +565,10 @@ blic/amsfonts/cm/cmr12.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/type1
 pe1/public/amsfonts/cm/cmr9.pfb></usr/local/texlive/2025basic/texmf-dist/fonts/
 type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2025basic/texmf-dist/fo
 nts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on final-report.pdf (15 pages, 1763398 bytes).
+Output written on final-report.pdf (16 pages, 1657492 bytes).
 PDF statistics:
- 261 PDF objects out of 1000 (max. 8388607)
- 205 compressed objects within 3 object streams
+ 265 PDF objects out of 1000 (max. 8388607)
+ 210 compressed objects within 3 object streams
  54 named destinations out of 1000 (max. 500000)
- 172 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 175 words of extra memory for PDF output out of 10000 (max. 10000000)
 
