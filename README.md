@@ -44,6 +44,28 @@ The project uses:
 - `HaluEval QA`: main context-grounded hallucination dataset
 - `TruthfulQA generation`: no-context truthfulness dataset and external evaluation dataset
 
+## Dataset Representation
+
+Raw dataset rows are normalized into:
+
+```text
+prompt, context, answer, label
+```
+
+The classifiers do not receive raw text directly. Each example is first passed through a Qwen feature extractor and represented as a 15-dimensional numerical uncertainty vector:
+
+```text
+X = uncertainty features
+y = binary hallucination label
+```
+
+The target variable is:
+
+```text
+0 = supported / truthful
+1 = hallucinated / unsupported / incorrect
+```
+
 Processed schema:
 
 ```text
@@ -532,27 +554,17 @@ Completed:
 - Qwen2.5-0.5B ablation study
 - visualizations
 - progress report
-
-Missing or remaining for final completion:
-
-- final error analysis write-up
-- final report discussion and limitations
-- optional improvement experiment or future-work discussion
+- final report
+- presentation materials
 
 ## Remaining Work
 
-Recommended next steps:
+Recommended before submission:
 
-1. Write final discussion:
-   - strong HaluEval performance
-   - effect of removing HaluEval context
-   - weaker TruthfulQA performance
-   - context-grounded vs no-context detection
-   - dataset shift
-2. Use generated figures in the final report and presentation.
-3. Optional future improvement:
-   - automatic retrieval of evidence/context before feature extraction
-   - testing a different LLM family as the feature extractor
+1. Make sure local model weights under `models/` are not committed.
+2. Make sure the virtual environment `.venv/` is not committed.
+3. Commit the final README, report, scripts, source code, and selected output tables/figures.
+4. Confirm the final report PDF opens correctly before sending the GitHub link.
 
 ## Scope Note
 
