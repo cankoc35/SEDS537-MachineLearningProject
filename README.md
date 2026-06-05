@@ -1,85 +1,100 @@
 # LLM Hallucination Detection via Uncertainty
 
-This repository contains the term project for `SEDS 537 - Machine Learning`.
+Final project repository for `SEDS 537 - Machine Learning`.
 
-The project studies hallucination detection as a binary classification task. Given a question, a candidate answer, and optionally a context passage, the system predicts whether the answer is supported/truthful or hallucinated/unsupported.
+This project studies hallucination detection as a binary classification task. Given a question, a candidate answer, and optionally a context passage, the system predicts whether the answer is supported/truthful or hallucinated/unsupported.
+
+The central idea is to represent each answer with uncertainty features extracted from an open-source language model, then train classical machine learning classifiers on those numeric features.
+
+## Final Submission Contents
+
+This repository contains:
+
+- source code for preprocessing, feature extraction, evaluation, ablation, error analysis, and visualization
+- processed dataset files and extracted uncertainty feature tables
+- evaluation outputs, prediction files, tables, and figures
+- final report files under `docs/final-report/`
+- development notes under `docs/development_log.md`
+
+Local model weights and virtual environments are intentionally excluded from Git:
+
+```text
+models/
+.venv/
+```
 
 ## Project Aim
 
-The aim is to detect hallucinated LLM answers using uncertainty signals extracted from open-source LLMs. The current implementation uses `Qwen/Qwen2.5-3B` as the main feature extractor and `Qwen/Qwen2.5-0.5B` as a smaller comparison model. Qwen is not asked to judge hallucination directly. Instead, the code reads Qwen's token-level probability distribution for a given answer and computes numeric uncertainty features.
+The aim is to detect hallucinated LLM answers using uncertainty signals extracted from open-source LLMs. The implementation uses:
 
-Current feature groups:
+- `Qwen/Qwen2.5-3B` as the main feature extractor
+- `Qwen/Qwen2.5-0.5B` as a smaller comparison feature extractor
 
-- token probability features
-- token log-probability features
-- low-confidence token ratio
-- token entropy features
-- high-entropy token ratio
+Qwen is not asked directly whether an answer is hallucinated. Instead, Qwen is used as a feature extractor. The code reads Qwen's token-level probability distribution for the given answer and computes numerical uncertainty features.
 
-These features are used to train:
+The classification models are:
 
 - Logistic Regression
 - Linear SVM
 - RBF SVM
 - Random Forest
 
-## Current Finding
-
-The method works very well on context-grounded HaluEval QA, but performance is weaker on no-context TruthfulQA. This suggests that the current detector is strongest when context/evidence is available.
-
-Important limitation:
-
-```text
-The classifier does not directly use raw context text.
-However, context affects the uncertainty features because Qwen scores:
-context + question + answer
-```
-
-For open-domain question-answer pairs without context, the method depends more heavily on Qwen's internal knowledge and calibration.
-
-## Datasets
-
-The project uses:
-
-- `HaluEval QA`: main context-grounded hallucination dataset
-- `TruthfulQA generation`: no-context truthfulness dataset and external evaluation dataset
-
 ## Dataset Representation
 
-Raw dataset rows are normalized into:
+Raw examples are normalized into the following structure:
 
 ```text
 prompt, context, answer, label
 ```
 
-The classifiers do not receive raw text directly. Each example is first passed through a Qwen feature extractor and represented as a 15-dimensional numerical uncertainty vector:
+The classifiers do not receive raw text directly. Each example is represented as a 15-dimensional numerical uncertainty feature vector:
 
 ```text
-X = uncertainty features
+X = uncertainty feature vector
 y = binary hallucination label
 ```
 
-The target variable is:
+The target labels are:
 
 ```text
 0 = supported / truthful
 1 = hallucinated / unsupported / incorrect
 ```
 
-Processed schema:
+The extracted independent variables are:
 
 ```text
-id, dataset, task, prompt, context, answer, label, source, metadata
+answer_length_tokens
+mean_token_probability
+min_token_probability
+max_token_probability
+mean_token_logprob
+min_token_logprob
+max_token_logprob
+sum_token_logprob
+negative_mean_logprob
+low_confidence_token_ratio
+mean_token_entropy
+min_token_entropy
+max_token_entropy
+sum_token_entropy
+high_entropy_token_ratio
 ```
 
-Labels:
+## Datasets
 
-```text
-0 = supported / truthful
-1 = hallucinated / unsupported / incorrect
-```
+The project uses two benchmark datasets:
 
-Processed files:
+- HaluEval QA: context-grounded hallucination detection dataset
+- TruthfulQA generation: no-context truthfulness dataset
+
+Dataset links:
+
+- HaluEval: https://github.com/RUCAIBox/HaluEval
+- TruthfulQA: https://huggingface.co/datasets/truthfulqa/truthful_qa
+- TruthfulQA paper: https://arxiv.org/abs/2109.07958
+
+Processed files in this repository:
 
 ```text
 data/processed/halueval.jsonl
@@ -87,7 +102,7 @@ data/processed/halueval_no_context.jsonl
 data/processed/truthfulqa.jsonl
 ```
 
-Feature tables:
+Extracted feature tables:
 
 ```text
 data/processed/halueval_uncertainty_entropy_features.csv
@@ -97,6 +112,58 @@ data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
 data/processed/halueval_no_context_uncertainty_entropy_features.csv
 data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
 ```
+
+## Method Summary
+
+For each example, the pipeline performs the following steps:
+
+1. Build a scoring prompt from the question, optional context, and answer.
+2. Tokenize the prompt and the answer.
+3. Run Qwen on the combined prompt and answer.
+4. Extract probability, log-probability, and entropy for each answer token.
+5. Aggregate token-level scores into answer-level uncertainty features.
+6. Train binary classifiers using the extracted feature table.
+
+Important distinction:
+
+```text
+The classifier does not directly use raw context text.
+However, context can affect the uncertainty features because Qwen scores:
+context + question + answer
+```
+
+This is why the method performs best in context-grounded settings.
+
+## Main Findings
+
+The method works very well on HaluEval QA and performs moderately on TruthfulQA. This suggests that uncertainty features are useful for hallucination detection, but generalization across dataset types is difficult.
+
+Best grouped 5-fold cross-validation results:
+
+| Experiment | Best Model | F1 | ROC-AUC |
+|---|---:|---:|---:|
+| HaluEval QA, Qwen2.5-3B | RBF SVM | 0.9883 | 0.9979 |
+| HaluEval QA, Qwen2.5-0.5B | RBF SVM | 0.9759 | 0.9939 |
+| HaluEval no-context, Qwen2.5-3B | Random Forest | 0.9277 | 0.9711 |
+| HaluEval no-context, Qwen2.5-0.5B | Random Forest | 0.9271 | 0.9701 |
+| TruthfulQA, Qwen2.5-3B | RBF SVM | 0.7173 | 0.6826 |
+| TruthfulQA, Qwen2.5-0.5B | RBF SVM | 0.7181 | 0.6820 |
+
+External transfer from HaluEval to TruthfulQA was weak:
+
+| Experiment | Best Model | F1 | ROC-AUC |
+|---|---:|---:|---:|
+| HaluEval 3B to TruthfulQA | Random Forest | 0.6311 | 0.3985 |
+| HaluEval 0.5B to TruthfulQA | Random Forest | 0.6388 | 0.4000 |
+| HaluEval no-context 3B to TruthfulQA | Random Forest | 0.5927 | 0.4710 |
+| HaluEval no-context 0.5B to TruthfulQA | Random Forest | 0.6024 | 0.4890 |
+
+Main interpretation:
+
+- HaluEval is highly separable using uncertainty features.
+- Removing context lowers HaluEval performance but does not collapse it.
+- TruthfulQA is harder because many correct and incorrect answers produce overlapping uncertainty patterns.
+- Dataset shift is a major limitation for external transfer.
 
 ## Repository Structure
 
@@ -108,31 +175,19 @@ data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
 │   └── README.md
 ├── docs/
 │   ├── development_log.md
+│   ├── final-report/                # final LaTeX report and PDF
 │   ├── literature/
+│   ├── presentation/
 │   └── progress-report/
-├── models/                          # local LLM weights, ignored by Git
-│   └── qwen2.5-3b/
 ├── outputs/
-│   ├── figures/
-│   ├── predictions/
-│   └── tables/
-├── scripts/
-│   ├── prepare_data.sh
-│   ├── evaluate_halueval_no_context.sh
-│   ├── evaluate.sh
-│   ├── evaluate_truthfulqa.sh
-│   ├── evaluate_external_truthfulqa.sh
-│   ├── evaluate_qwen05b.sh
-│   ├── run_ablation.sh
-│   ├── run_ablation_qwen05b.sh
-│   ├── run_cross_validation.sh
-│   ├── run_cross_validation_no_context.sh
-│   ├── create_figures.sh
-│   └── analyze_truthfulqa_errors.sh
+│   ├── figures/                     # generated plots
+│   ├── predictions/                 # model predictions
+│   └── tables/                      # metrics and analysis tables
+├── scripts/                         # reproducibility scripts
 ├── src/
 │   ├── data/                        # download and preprocessing
 │   ├── evaluation/                  # metrics, evaluation, error analysis
-│   ├── features/                    # uncertainty feature extraction
+│   ├── features/                    # uncertainty feature aggregation
 │   ├── generation/                  # Qwen scoring and feature extraction
 │   ├── models/                      # classifier definitions
 │   └── utils/
@@ -159,13 +214,6 @@ Download and preprocess the default datasets:
 ./scripts/prepare_data.sh
 ```
 
-This creates:
-
-```text
-data/processed/halueval.jsonl
-data/processed/truthfulqa.jsonl
-```
-
 Create the no-context HaluEval variant:
 
 ```bash
@@ -174,16 +222,16 @@ Create the no-context HaluEval variant:
   --output data/processed/halueval_no_context.jsonl
 ```
 
-## Local Qwen Model
+## Local Qwen Models
 
-The feature extractor expects local Qwen weights under:
+The feature extraction scripts expect local Qwen weights under:
 
 ```text
 models/qwen2.5-3b/
 models/qwen2.5-0.5b/
 ```
 
-If needed, download with:
+Download Qwen2.5-3B:
 
 ```bash
 hf download Qwen/Qwen2.5-3B \
@@ -191,7 +239,7 @@ hf download Qwen/Qwen2.5-3B \
   --local-dir models/qwen2.5-3b
 ```
 
-Smaller comparison model:
+Download Qwen2.5-0.5B:
 
 ```bash
 hf download Qwen/Qwen2.5-0.5B \
@@ -199,11 +247,11 @@ hf download Qwen/Qwen2.5-0.5B \
   --local-dir models/qwen2.5-0.5b
 ```
 
-The root `models/` directory should not be committed to Git.
+The `models/` directory is ignored by Git and should not be committed.
 
 ## Feature Extraction
 
-HaluEval:
+HaluEval with Qwen2.5-3B:
 
 ```bash
 .venv/bin/python -m src.generation.extract_logprobs \
@@ -213,7 +261,7 @@ HaluEval:
   --output data/processed/halueval_uncertainty_entropy_features.csv
 ```
 
-TruthfulQA:
+TruthfulQA with Qwen2.5-3B:
 
 ```bash
 .venv/bin/python -m src.generation.extract_logprobs \
@@ -223,22 +271,13 @@ TruthfulQA:
   --output data/processed/truthfulqa_uncertainty_entropy_features.csv
 ```
 
-`--limit 0` means process all rows.
-
-For the 0.5B comparison, use the same commands with:
+For Qwen2.5-0.5B, use the same command structure with:
 
 ```text
 --model models/qwen2.5-0.5b
 ```
 
-and write to:
-
-```text
-data/processed/halueval_uncertainty_entropy_qwen05b_features.csv
-data/processed/truthfulqa_uncertainty_entropy_qwen05b_features.csv
-```
-
-For the no-context HaluEval variant:
+For HaluEval no-context:
 
 ```bash
 .venv/bin/python -m src.generation.extract_logprobs \
@@ -248,145 +287,39 @@ For the no-context HaluEval variant:
   --output data/processed/halueval_no_context_uncertainty_entropy_features.csv
 ```
 
-For Qwen2.5-0.5B:
+`--limit 0` means process all rows.
 
-```bash
-.venv/bin/python -m src.generation.extract_logprobs \
-  --input data/processed/halueval_no_context.jsonl \
-  --limit 0 \
-  --model models/qwen2.5-0.5b \
-  --output data/processed/halueval_no_context_uncertainty_entropy_qwen05b_features.csv
-```
+## Evaluation
 
-## Evaluation Commands
-
-### HaluEval 80/20 Evaluation
+Run HaluEval 80/20 evaluation:
 
 ```bash
 ./scripts/evaluate.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/halueval_classifier_metrics.csv
-outputs/predictions/halueval_classifier_predictions.csv
-```
-
-Current HaluEval results:
-
-```text
-Logistic Regression: accuracy 0.9875, F1 0.9875, ROC-AUC 0.9986
-Linear SVM:          accuracy 0.9885, F1 0.9885, ROC-AUC 0.9986
-RBF SVM:             accuracy 0.9880, F1 0.9880, ROC-AUC 0.9986
-Random Forest:       accuracy 0.9883, F1 0.9883, ROC-AUC 0.9988
-```
-
-### TruthfulQA 80/20 Evaluation
+Run TruthfulQA 80/20 evaluation:
 
 ```bash
 ./scripts/evaluate_truthfulqa.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/truthfulqa_classifier_metrics.csv
-outputs/predictions/truthfulqa_classifier_predictions.csv
-```
-
-Current TruthfulQA-only results:
-
-```text
-Logistic Regression: accuracy 0.6254, F1 0.6928, ROC-AUC 0.6539
-Linear SVM:          accuracy 0.6254, F1 0.6941, ROC-AUC 0.6537
-RBF SVM:             accuracy 0.6272, F1 0.7037, ROC-AUC 0.6830
-Random Forest:       accuracy 0.6352, F1 0.6850, ROC-AUC 0.6894
-```
-
-### External Evaluation: HaluEval to TruthfulQA
+Run HaluEval-to-TruthfulQA external evaluation:
 
 ```bash
 ./scripts/evaluate_external_truthfulqa.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/halueval_to_truthfulqa_classifier_metrics.csv
-outputs/predictions/halueval_to_truthfulqa_classifier_predictions.csv
-```
-
-Current external evaluation results:
-
-```text
-Logistic Regression: accuracy 0.4838, F1 0.6252, ROC-AUC 0.3752
-Linear SVM:          accuracy 0.4836, F1 0.6248, ROC-AUC 0.3719
-RBF SVM:             accuracy 0.4730, F1 0.6120, ROC-AUC 0.3915
-Random Forest:       accuracy 0.4902, F1 0.6311, ROC-AUC 0.3985
-```
-
-Interpretation: HaluEval-trained models do not transfer well to TruthfulQA. This is evidence of dataset shift.
-
-### Qwen2.5-0.5B Evaluation
+Run Qwen2.5-0.5B evaluations:
 
 ```bash
 ./scripts/evaluate_qwen05b.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/halueval_qwen05b_classifier_metrics.csv
-outputs/tables/truthfulqa_qwen05b_classifier_metrics.csv
-outputs/tables/halueval_to_truthfulqa_qwen05b_classifier_metrics.csv
-```
-
-Main 0.5B results:
-
-```text
-HaluEval 80/20 best:        RBF SVM, F1 0.9762, ROC-AUC 0.9945
-TruthfulQA 80/20 best:      RBF SVM, F1 0.7150, ROC-AUC 0.6802
-HaluEval -> TruthfulQA:     Random Forest, F1 0.6388, ROC-AUC 0.4000
-```
-
-The smaller feature extractor remains useful, but it is weaker than 3B on HaluEval.
-
-### HaluEval No-Context Evaluation
+Run HaluEval no-context evaluations:
 
 ```bash
 ./scripts/evaluate_halueval_no_context.sh
 ```
-
-Outputs:
-
-```text
-outputs/tables/halueval_no_context_qwen3b_classifier_metrics.csv
-outputs/tables/halueval_no_context_qwen05b_classifier_metrics.csv
-outputs/tables/halueval_no_context_to_truthfulqa_qwen3b_classifier_metrics.csv
-outputs/tables/halueval_no_context_to_truthfulqa_qwen05b_classifier_metrics.csv
-```
-
-Main no-context results:
-
-```text
-HaluEval no-context 3B 80/20:        Random Forest, F1 0.9276, ROC-AUC 0.9699
-HaluEval no-context 0.5B 80/20:      Random Forest, F1 0.9283, ROC-AUC 0.9681
-HaluEval no-context 3B -> TruthfulQA:   Random Forest, F1 0.5927, ROC-AUC 0.4710
-HaluEval no-context 0.5B -> TruthfulQA: Random Forest, F1 0.6024, ROC-AUC 0.4890
-```
-
-Context effect:
-
-```text
-HaluEval with context:    about 0.988 F1
-HaluEval without context: about 0.927--0.928 F1
-TruthfulQA no context:    about 0.717--0.718 F1 with RBF SVM
-```
-
-Removing context lowers HaluEval performance, which confirms that context helps. However, HaluEval no-context still performs much better than TruthfulQA, suggesting that HaluEval contains dataset-specific signals beyond evidence grounding.
-
-## Cross-Validation
 
 Run grouped 5-fold cross-validation:
 
@@ -394,178 +327,88 @@ Run grouped 5-fold cross-validation:
 ./scripts/run_cross_validation.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/halueval_qwen3b_cv_summary.csv
-outputs/tables/truthfulqa_qwen3b_cv_summary.csv
-outputs/tables/halueval_qwen05b_cv_summary.csv
-outputs/tables/truthfulqa_qwen05b_cv_summary.csv
-```
-
-For HaluEval no-context CV:
+Run HaluEval no-context grouped 5-fold cross-validation:
 
 ```bash
 ./scripts/run_cross_validation_no_context.sh
 ```
 
-Outputs:
+Grouped splitting keeps all answers from the same original question in the same train/test fold. This prevents paired examples from leaking across train and test.
 
-```text
-outputs/tables/halueval_no_context_qwen3b_cv_summary.csv
-outputs/tables/halueval_no_context_qwen05b_cv_summary.csv
+## Ablation, Error Analysis, and Figures
+
+Run ablation study:
+
+```bash
+./scripts/run_ablation.sh
+./scripts/run_ablation_qwen05b.sh
 ```
 
-Grouped cross-validation keeps all answers from the same original question in the same fold. This prevents train-test leakage.
-
-Main CV findings:
-
-```text
-Qwen2.5-3B   HaluEval:   best F1 0.9883 with RBF SVM
-Qwen2.5-0.5B HaluEval:   best F1 0.9759 with RBF SVM
-Qwen2.5-3B   TruthfulQA: best F1 0.7173 with RBF SVM
-Qwen2.5-0.5B TruthfulQA: best F1 0.7181 with RBF SVM
-Qwen2.5-3B   HaluEval no-context:   best ROC-AUC 0.9711, F1 about 0.9277
-Qwen2.5-0.5B HaluEval no-context:   best ROC-AUC 0.9701, F1 about 0.9271
-```
-
-The CV results confirm the original 80/20 pattern: HaluEval is much easier than TruthfulQA.
-
-## Error Analysis
-
-Run:
+Run TruthfulQA error analysis:
 
 ```bash
 ./scripts/analyze_truthfulqa_errors.sh
 ```
 
-Outputs:
-
-```text
-outputs/tables/feature_distribution_by_dataset.csv
-outputs/tables/feature_distribution_shift.csv
-outputs/tables/truthfulqa_error_summary.csv
-outputs/predictions/truthfulqa_error_examples.csv
-```
-
-Main finding:
-
-TruthfulQA examples are more uncertain overall than HaluEval examples. Compared with HaluEval, TruthfulQA has:
-
-- higher `max_token_entropy`
-- lower `min_token_probability`
-- higher `mean_token_entropy`
-- lower `mean_token_probability`
-- higher `low_confidence_token_ratio`
-
-This explains why many correct TruthfulQA answers are predicted as hallucinated.
-
-## Ablation Study
-
-Run:
-
-```bash
-./scripts/run_ablation.sh
-```
-
-For the 0.5B feature tables:
-
-```bash
-./scripts/run_ablation_qwen05b.sh
-```
-
-Outputs:
-
-```text
-outputs/tables/halueval_ablation_results.csv
-outputs/tables/truthfulqa_ablation_results.csv
-outputs/tables/halueval_to_truthfulqa_ablation_results.csv
-outputs/tables/halueval_qwen05b_ablation_results.csv
-outputs/tables/truthfulqa_qwen05b_ablation_results.csv
-outputs/tables/halueval_to_truthfulqa_qwen05b_ablation_results.csv
-```
-
-Feature groups:
-
-```text
-confidence_logprob = answer length + probability/log-probability features
-entropy = answer length + entropy features
-all_features = confidence/logprob + entropy features
-```
-
-Main ablation findings:
-
-- HaluEval: all features perform best.
-- TruthfulQA: all features are generally best, but performance remains moderate.
-- HaluEval -> TruthfulQA: entropy-only transfers slightly better, but all transfer results are weak.
-- The same pattern appears with the 0.5B feature extractor.
-
-Final decision:
-
-```text
-Use all features as the main method.
-Use ablation results to explain feature contribution and dataset shift.
-```
-
-## Visualizations
-
-Generate report figures:
+Generate figures:
 
 ```bash
 ./scripts/create_figures.sh
 ```
 
-Outputs:
+Main output directories:
 
 ```text
-outputs/figures/cv_model_size_comparison.png
-outputs/figures/context_effect_comparison.png
-outputs/figures/ablation_feature_group_comparison.png
+outputs/tables/
+outputs/predictions/
+outputs/figures/
+```
+
+## Important Output Files
+
+Cross-validation summaries:
+
+```text
+outputs/tables/halueval_qwen3b_cv_summary.csv
+outputs/tables/halueval_qwen05b_cv_summary.csv
+outputs/tables/truthfulqa_qwen3b_cv_summary.csv
+outputs/tables/truthfulqa_qwen05b_cv_summary.csv
+outputs/tables/halueval_no_context_qwen3b_cv_summary.csv
+outputs/tables/halueval_no_context_qwen05b_cv_summary.csv
+```
+
+Ablation outputs:
+
+```text
+outputs/tables/halueval_ablation_results.csv
+outputs/tables/truthfulqa_ablation_results.csv
+outputs/tables/halueval_qwen05b_ablation_results.csv
+outputs/tables/truthfulqa_qwen05b_ablation_results.csv
+```
+
+Visual outputs:
+
+```text
 outputs/figures/confusion_matrices.png
 outputs/figures/roc_curves.png
 outputs/figures/feature_distribution_shift.png
+outputs/figures/context_effect_comparison.png
+outputs/figures/halueval_qa_pca_decision_boundary_rbf_svm.png
+outputs/figures/truthfulqa_pca_decision_boundary_rbf_svm.png
 ```
 
-These figures summarize model-size comparison, context effect, feature ablation, classification errors, ROC curves, and feature distribution shift.
+## Final Report
 
-## Current Status
+The final report files are stored under:
 
-Completed:
+```text
+docs/final-report/
+```
 
-- HaluEval and TruthfulQA preprocessing
-- HaluEval no-context dataset
-- Qwen-based token probability/logprob extraction
-- entropy feature extraction
-- HaluEval feature table
-- TruthfulQA feature table
-- Qwen2.5-0.5B feature tables
-- HaluEval no-context feature tables
-- HaluEval grouped 80/20 evaluation
-- HaluEval no-context grouped 80/20 evaluation
-- TruthfulQA grouped 80/20 evaluation
-- HaluEval-to-TruthfulQA external evaluation
-- HaluEval no-context-to-TruthfulQA external evaluation
-- Qwen2.5-0.5B grouped and external evaluation
-- grouped 5-fold cross-validation
-- HaluEval no-context grouped 5-fold cross-validation
-- feature distribution analysis
-- TruthfulQA error analysis
-- ablation study
-- Qwen2.5-0.5B ablation study
-- visualizations
-- progress report
-- final report
-- presentation materials
+The editable LaTeX source should also be shared through Overleaf according to the course submission instructions.
 
-## Remaining Work
+## Scope and Limitations
 
-Recommended before submission:
+The current system is best described as an uncertainty-based hallucination detector. It performs strongest on context-grounded HaluEval examples and weaker on no-context TruthfulQA examples.
 
-1. Make sure local model weights under `models/` are not committed.
-2. Make sure the virtual environment `.venv/` is not committed.
-3. Commit the final README, report, scripts, source code, and selected output tables/figures.
-4. Confirm the final report PDF opens correctly before sending the GitHub link.
-
-## Scope Note
-
-The current model should be described as a context-grounded hallucination detector. It performs best when context is available. For no-context use cases, a future version may retrieve evidence automatically from Wikipedia, web search, or trusted domain documents before extracting uncertainty features.
+The main limitation is dataset shift: patterns learned from HaluEval do not transfer reliably to TruthfulQA. A future version could add automatic evidence retrieval before uncertainty feature extraction, or test additional LLM families as feature extractors.
